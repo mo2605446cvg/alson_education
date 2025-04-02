@@ -14,7 +14,7 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.19.5"
+          flutter-version: "3.29.2" # <-- التحديث هنا
           channel: stable
       
       - uses: android-actions/setup-android@v2
@@ -23,7 +23,6 @@ jobs:
           yes | sdkmanager --licenses
           yes | sdkmanager --install "platforms;android-34"
           yes | sdkmanager --install "build-tools;34.0.0"
-          flutter doctor -v
       
       - run: flutter clean
       - run: flutter pub get
