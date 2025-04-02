@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:uuid/uuid.dart';
+import 'package:alson_education/models/alson_education_user.dart';
 
 class AlsonEducationDatabase {
   static final AlsonEducationDatabase instance = AlsonEducationDatabase._init();
@@ -14,7 +14,7 @@ class AlsonEducationDatabase {
     return _database!;
   }
 
-  static Future initDB() async {
+  static Future<void> initDB() async {
     await instance.database;
   }
 
@@ -25,7 +25,7 @@ class AlsonEducationDatabase {
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE users (
         code TEXT PRIMARY KEY,
@@ -36,18 +36,54 @@ class AlsonEducationDatabase {
       )
     ''');
 
-    // بقية الجداول بنفس النمط...
+    await db.execute('''
+      CREATE TABLE content (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        uploaded_by TEXT NOT NULL,
+        upload_date TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE chat (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_code TEXT NOT NULL,
+        receiver_code TEXT NOT NULL,
+        message TEXT NOT NULL,
+        timestamp TEXT NOT NULL
+      )
+    ''');
+
+    // إضافة مستخدم أدمن افتراضي إذا لم يكن موجوداً
+    final admin = await db.query('users', where: 'code = ?', whereArgs: ['admin123']);
+    if (admin.isEmpty) {
+      await db.insert('users', {
+        'code': 'admin123',
+        'username': 'Admin',
+        'department': 'Management',
+        'role': 'admin',
+        'password': 'adminpass'
+      });
+    }
   }
 
-  // جميع الدوال الأخرى بنفس النمط مع تعديل الاسم
-  static Future<int> createUser(Map<String, dynamic> user) async {
+  static Future<List<AlsonEducationUser>> getAllUsers() async {
+    final db = await instance.database;
+    final users = await db.query('users');
+    return users.map((user) => AlsonEducationUser.fromMap(user)).toList();
+  }
+
+  static Future<int> createUser(AlsonEducationUser user) async {
     final db = await instance.database;
     return await db.insert('users', {
-      'code': Uuid().v4().substring(0, 8),
-      'username': user['username'],
-      'department': user['department'],
-      'password': user['password'],
-      'role': user['role'] ?? 'user'
+      'code': user.code,
+      'username': user.username,
+      'department': user.department,
+      'role': user.role,
+      'password': user.password,
     });
   }
 }
