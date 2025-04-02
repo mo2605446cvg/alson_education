@@ -45,7 +45,7 @@ class _AlsonEducationUploadContentScreenState extends State<AlsonEducationUpload
         'title': _titleController.text,
         'file_path': savedFile.path,
         'file_type': fileName.split('.').last,
-        'uploaded_by': 'admin123', // Replace with actual user code
+        'uploaded_by': 'admin123', // استبدل بآيدي المستخدم الحالي
         'upload_date': DateTime.now().toString(),
       });
 
@@ -55,7 +55,7 @@ class _AlsonEducationUploadContentScreenState extends State<AlsonEducationUpload
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ: $e')),
+        SnackBar(content: Text('حدث خطأ: ${e.toString()}')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -96,10 +96,10 @@ class _AlsonEducationUploadContentScreenState extends State<AlsonEducationUpload
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _uploadContent,
+                      child: const Text('رفع المحتوى', style: TextStyle(fontSize: 18)),
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
                       ),
-                      child: const Text('رفع المحتوى', style: TextStyle(fontSize: 18)),
                     ),
             ],
           ),
