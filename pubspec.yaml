@@ -1,25 +1,79 @@
 name: alson_education
-description: Alson Education App for students and teachers.
+description: تطبيق الألسن للعلوم الحديثة - نظام إدارة تعليمي متكامل
 
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.13.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.2.8
+  cupertino_icons: ^1.0.6
+  flutter_localizations:
+    sdk: flutter
+
+  # Database
+  sqflite: ^2.2.8+4
   path: ^1.8.3
+
+  # File Management
   file_picker: ^6.1.1
-  excel: ^3.0.0
-  path_provider: ^2.0.15
   open_file: ^3.3.3
-  url_launcher: ^6.1.11
+  path_provider: ^2.1.1
+
+  # Excel Handling
+  excel: ^3.0.0
+
+  # Networking & APIs
+  http: ^0.13.6
+
+  # UI & Helpers
+  provider: ^6.1.1
+  responsive_framework: ^0.2.0
+  flutter_svg: ^2.0.7
+
+  # Authentication & Security
   uuid: ^3.0.7
+  shared_preferences: ^2.2.2
+
+  # Communication
+  url_launcher: ^6.1.11
   flutter_email_sender: ^5.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true
+  generate: true
+
   assets:
-    - assets/logo.png
+    - assets/images/
+    - assets/icons/
+    - assets/documents/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+
+  # Enable all platforms
+  platforms:
+    android:
+      package: com.alson.education
+    ios:
+      bundleIdentifier: com.alson.education
+    web:
+      renderer: html
+    windows:
+      enable: true
+    macos:
+      enable: true
+    linux:
+      enable: true
