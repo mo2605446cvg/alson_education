@@ -12,24 +12,13 @@ class AlsonEducationHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('الصفحة الرئيسية'),
         actions: [
-          PopupMenuButton(
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title: const Text('الملف الشخصي'),
-                  onTap: () => Navigator.pushNamed(context, '/profile'),
-                ),
-              ),
-              if (currentUser.role == 'admin')
-                PopupMenuItem(
-                  child: ListTile(
-                    leading: const Icon(Icons.people),
-                    title: const Text('إدارة المستخدمين'),
-                    onTap: () => Navigator.pushNamed(context, '/user-management'),
-                  ),
-                ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => Navigator.pushNamed(
+              context,
+              '/profile',
+              arguments: currentUser,
+            ),
           ),
         ],
       ),
@@ -41,31 +30,35 @@ class AlsonEducationHomeScreen extends StatelessWidget {
         children: [
           _buildDashboardItem(
             context,
-            'المحتوى التعليمي',
-            Icons.folder,
+            'الملف الشخصي',
+            Icons.person,
             Colors.blue,
-            '/content',
+            () => Navigator.pushNamed(
+              context,
+              '/profile',
+              arguments: currentUser,
+            ),
+          ),
+          _buildDashboardItem(
+            context,
+            'المحتوى',
+            Icons.folder,
+            Colors.amber,
+            () {},
           ),
           _buildDashboardItem(
             context,
             'الشات',
             Icons.chat,
             Colors.green,
-            '/chat',
+            () {},
           ),
           _buildDashboardItem(
             context,
             'النتائج',
             Icons.assessment,
-            Colors.orange,
-            '/results',
-          ),
-          _buildDashboardItem(
-            context,
-            'المساعدة',
-            Icons.help,
             Colors.purple,
-            '/help',
+            () {},
           ),
         ],
       ),
@@ -73,7 +66,12 @@ class AlsonEducationHomeScreen extends StatelessWidget {
   }
 
   Widget _buildDashboardItem(
-      BuildContext context, String title, IconData icon, Color color, String route) {
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(
@@ -81,7 +79,7 @@ class AlsonEducationHomeScreen extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(15),
-        onTap: () => Navigator.pushNamed(context, route),
+        onTap: onTap,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
