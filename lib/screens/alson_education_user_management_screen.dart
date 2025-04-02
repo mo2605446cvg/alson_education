@@ -15,6 +15,7 @@ class AlsonEducationUserManagementScreen extends StatefulWidget {
 class _AlsonEducationUserManagementScreenState extends State<AlsonEducationUserManagementScreen> {
   List<AlsonEducationUser> _users = [];
   bool _isLoading = false;
+  final Uuid _uuid = const Uuid();
 
   @override
   void initState() {
@@ -24,53 +25,58 @@ class _AlsonEducationUserManagementScreenState extends State<AlsonEducationUserM
 
   Future<void> _loadUsers() async {
     setState(() => _isLoading = true);
-    final db = await AlsonEducationDatabase.instance.database;
-    final users = await db.query('users');
-    setState(() {
-      _users = users.map((user) => AlsonEducationUser.fromMap(user)).toList();
-      _isLoading = false;
-    });
+    _users = await AlsonEducationDatabase.getAllUsers();
+    setState(() => _isLoading = false);
   }
 
   Future<void> _uploadExcel() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
     );
 
-    if (result != null) {
-      setState(() => _isLoading = true);
-      try {
-        final file = result.files.first;
-        final bytes = file.bytes;
-        final excel = Excel.decodeBytes(bytes!);
+    if (result == null) return;
 
-        for (var table in excel.tables.keys) {
-          final sheet = excel.tables[table]!;
-          final department = table;
+    setState(() => _isLoading = true);
+    try {
+      final file = result.files.first;
+      final excel = Excel.decodeBytes(file.bytes!);
 
-          for (var row in sheet.rows) {
-            if (row.length >= 2) {
-              await AlsonEducationDatabase.createUser({
-                'username': row[0]!.value.toString(),
-                'department': department,
-                'password': row[1]!.value.toString(),
-              });
-            }
+      for (final table in excel.tables.keys) {
+        final sheet = excel.tables[table]!;
+        for (final row in sheet.rows) {
+          if (row.length >= 2) {
+            await AlsonEducationDatabase.createUser(
+              AlsonEducationUser(
+                code: _uuid.v4().substring(0, 8),
+                username: row[0]!.value.toString(),
+                department: table,
+                role: 'user',
+                password: row[1]!.value.toString(),
+              ),
+            );
           }
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم استيراد المستخدمين بنجاح')),
-        );
-        await _loadUsers();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في استيراد الملف: $e')),
-        );
       }
+      await _loadUsers();
+      _showSuccess('تم استيراد المستخدمين بنجاح');
+    } catch (e) {
+      _showError('حدث خطأ: ${e.toString()}');
+    } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
   }
 
   @override
@@ -78,8 +84,8 @@ class _AlsonEducationUserManagementScreenState extends State<AlsonEducationUserM
     return Scaffold(
       appBar: AppBar(title: const Text('إدارة المستخدمين')),
       floatingActionButton: FloatingActionButton(
-        onPressed: _uploadExcel,
         child: const Icon(Icons.upload),
+        onPressed: _uploadExcel,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -114,11 +120,11 @@ class _AlsonEducationUserManagementScreenState extends State<AlsonEducationUserM
   }
 
   Future<void> _editUser(AlsonEducationUser user) async {
-    // تنفيذ واجهة التعديل
+    // تنفيذ واجهة التعديل هنا
   }
 
   Future<void> _deleteUser(String code) async {
-    final confirmed = await showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
@@ -138,9 +144,16 @@ class _AlsonEducationUserManagementScreenState extends State<AlsonEducationUserM
 
     if (confirmed == true) {
       setState(() => _isLoading = true);
-      final db = await AlsonEducationDatabase.instance.database;
-      await db.delete('users', where: 'code = ?', whereArgs: [code]);
-      await _loadUsers();
+      try {
+        final db = await AlsonEducationDatabase.instance.database;
+        await db.delete('users', where: 'code = ?', whereArgs: [code]);
+        await _loadUsers();
+        _showSuccess('تم حذف المستخدم بنجاح');
+      } catch (e) {
+        _showError('حدث خطأ أثناء الحذف: ${e.toString()}');
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }
