@@ -3,8 +3,6 @@ name: Build All Platforms
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   enable_platforms:
@@ -25,7 +23,7 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build web
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: build/web/
@@ -38,7 +36,7 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build windows
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: build/windows/
@@ -52,10 +50,10 @@ jobs:
       - run: sudo apt-get install clang cmake ninja-build -y
       - run: flutter pub get
       - run: flutter build linux
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-build
-          path: build/linux/
+          path: build/linux/x64/release/bundle/
 
   build_android:
     needs: enable_platforms
@@ -65,10 +63,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build apk
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/
+          path: build/app/outputs/flutter-apk/app-release.apk
 
   build_macos:
     needs: enable_platforms
@@ -78,10 +76,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build macos
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-build
-          path: build/macos/
+          path: build/macos/Build/Products/Release/
 
   build_ios:
     needs: enable_platforms
@@ -91,7 +89,7 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: build/ios/
+          path: build/ios/iphoneos/Runner.app
