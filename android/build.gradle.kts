@@ -3,9 +3,10 @@ buildscript {
         google()
         mavenCentral()
     }
-    dependencies {
-        classpath("com.android.tools.build:gradle:7.4.2")
-    }
+    // في android/build.gradle:
+dependencies {
+    classpath 'com.android.tools.build:gradle:8.1.0' // <-- التحديث هنا
+}
 }
 
 allprojects {
