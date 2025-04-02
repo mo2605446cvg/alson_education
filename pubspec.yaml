@@ -47,17 +47,8 @@ dev_dependencies:
   flutter_lints: ^3.0.1
 
 flutter:
-  uses-material-design: true
-  generate: true
 
   assets:
     - assets/images/
     - assets/icons/
     - assets/documents/
-
-  fonts:
-    - family: Cairo
-      fonts:
-        - asset: assets/fonts/Cairo-Regular.ttf
-        - asset: assets/fonts/Cairo-Bold.ttf
-          weight: 700
