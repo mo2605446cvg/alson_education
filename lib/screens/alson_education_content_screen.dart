@@ -22,17 +22,18 @@ class _AlsonEducationContentScreenState extends State<AlsonEducationContentScree
   Future<void> _loadContents() async {
     setState(() => _isLoading = true);
     final db = await AlsonEducationDatabase.instance.database;
-    final contents = await db.query('content');
-    setState(() {
-      _contents = contents;
-      _isLoading = false;
-    });
+    _contents = await db.query('content');
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('المحتوى التعليمي')),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => Navigator.pushNamed(context, '/upload-content'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _contents.isEmpty
