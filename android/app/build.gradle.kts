@@ -17,12 +17,6 @@ android {
         jvmTarget = "17"
     }
 
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/kotlin")
-        }
-    }
-
     defaultConfig {
         applicationId = "com.alsoneducation.alson_education"
         minSdk = 21
