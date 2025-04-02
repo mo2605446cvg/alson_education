@@ -14,17 +14,18 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.29.2" # <-- التحديث هنا
+          flutter-version: "3.29.2"
           channel: stable
       
-      - uses: android-actions/setup-android@v2
+      - run: flutter config --no-analytics
+      - run: flutter clean
       
+      - uses: android-actions/setup-android@v2
       - run: |
           yes | sdkmanager --licenses
           yes | sdkmanager --install "platforms;android-34"
           yes | sdkmanager --install "build-tools;34.0.0"
       
-      - run: flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
       
