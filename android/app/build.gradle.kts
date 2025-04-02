@@ -1,3 +1,4 @@
+// في ملف android/app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
@@ -5,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.alsoneducation.alson_education"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 // <-- التحديث هنا (كان flutter.compileSdkVersion)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -16,8 +17,8 @@ android {
     defaultConfig {
         applicationId = "com.alsoneducation.alson_education"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        targetSdk = 34 // <-- التحديث هنا (كان flutter.targetSdkVersion)
+        versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
     }
 
