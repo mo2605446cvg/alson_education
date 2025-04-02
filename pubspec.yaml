@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  flutter:
+  generate: true
+  # تأكد أن كل الأنظمة مفعلة عبر GitHub Actions
+
   flutter_lints: ^3.0.2      # لقواعد التحليل الثابت
   sqflite: ^2.3.3           # قاعدة بيانات SQLite (غير مدعومة على الويب)
   path_provider: ^2.1.4     # لمسارات الملفات (غير مدعومة على الويب)
