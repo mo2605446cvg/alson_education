@@ -1,6 +1,5 @@
 name: alson_education
 description: تطبيق الألسن للعلوم الحديثة - نظام إدارة تعليمي متكامل
-
 version: 1.0.0+1
 
 environment:
@@ -52,7 +51,9 @@ flutter:
   generate: true
 
   assets:
-    - assets/
+    - assets/images/
+    - assets/icons/
+    - assets/documents/
 
   fonts:
     - family: Cairo
@@ -60,18 +61,3 @@ flutter:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
-
-  # Enable all platforms
-  platforms:
-    android:
-      package: com.alson.education
-    ios:
-      bundleIdentifier: com.alson.education
-    web:
-      renderer: html
-    windows:
-      enable: true
-    macos:
-      enable: true
-    linux:
-      enable: true
