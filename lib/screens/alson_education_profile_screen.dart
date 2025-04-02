@@ -28,7 +28,11 @@ class _AlsonEducationProfileScreenState extends State<AlsonEducationProfileScree
 
   Future<void> _loadUserData() async {
     final db = await AlsonEducationDatabase.instance.database;
-    final user = await db.query('users', where: 'code = ?', whereArgs: [widget.userCode]);
+    final user = await db.query(
+      'users',
+      where: 'code = ?',
+      whereArgs: [widget.userCode],
+    );
     
     if (user.isNotEmpty) {
       setState(() {
@@ -42,28 +46,28 @@ class _AlsonEducationProfileScreenState extends State<AlsonEducationProfileScree
   }
 
   Future<void> _updateProfile() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      final db = await AlsonEducationDatabase.instance.database;
-      await db.update(
-        'users',
-        {
-          'username': _usernameController.text,
-          'department': _departmentController.text,
-          'password': _passwordController.text,
-        },
-        where: 'code = ?',
-        whereArgs: [_currentUser.code],
-      );
+    if (!_formKey.currentState!.validate()) return;
 
-      setState(() {
-        _isEditing = false;
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تحديث الملف الشخصي بنجاح')),
-      );
-    }
+    setState(() => _isLoading = true);
+    final db = await AlsonEducationDatabase.instance.database;
+    await db.update(
+      'users',
+      {
+        'username': _usernameController.text,
+        'department': _departmentController.text,
+        'password': _passwordController.text,
+      },
+      where: 'code = ?',
+      whereArgs: [_currentUser.code],
+    );
+
+    setState(() {
+      _isEditing = false;
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تم تحديث الملف الشخصي بنجاح')),
+    );
   }
 
   @override
@@ -86,50 +90,42 @@ class _AlsonEducationProfileScreenState extends State<AlsonEducationProfileScree
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.blue[100],
-                        child: const Icon(Icons.person, size: 60),
+                    CircleAvatar(
+                      radius: 60,
+                      child: Text(
+                        _currentUser.username[0],
+                        style: const TextStyle(fontSize: 40),
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    _buildProfileField(
-                      label: 'الكود الجامعي',
-                      value: _currentUser.code,
-                    ),
                     const SizedBox(height: 20),
+                    _buildProfileField('الكود الجامعي', _currentUser.code),
+                    const SizedBox(height: 15),
                     _buildEditableField(
                       controller: _usernameController,
                       label: 'اسم المستخدم',
                       icon: Icons.person,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 15),
                     _buildEditableField(
                       controller: _departmentController,
                       label: 'القسم',
                       icon: Icons.school,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 15),
                     _buildEditableField(
                       controller: _passwordController,
                       label: 'كلمة المرور',
                       icon: Icons.lock,
                       isPassword: true,
                     ),
-                    if (_isEditing) const SizedBox(height: 30),
-                    if (_isEditing)
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: _updateProfile,
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(200, 50),
-                          ),
-                          child: const Text('حفظ التغييرات'),
-                        ),
+                    if (_isEditing) ...[
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _updateProfile,
+                        child: const Text('حفظ التغييرات'),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -137,24 +133,13 @@ class _AlsonEducationProfileScreenState extends State<AlsonEducationProfileScree
     );
   }
 
-  Widget _buildProfileField({required String label, required String value}) {
+  Widget _buildProfileField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-        const SizedBox(height: 5),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
-            ],
-          ),
-        ),
+        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(value, style: const TextStyle(fontSize: 18)),
+        const Divider(),
       ],
     );
   }
@@ -168,37 +153,27 @@ class _AlsonEducationProfileScreenState extends State<AlsonEducationProfileScree
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-        const SizedBox(height: 5),
+        Text(label, style: const TextStyle(color: Colors.grey)),
         _isEditing
             ? TextFormField(
                 controller: controller,
                 obscureText: isPassword,
                 decoration: InputDecoration(
                   prefixIcon: Icon(icon),
-                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) => value!.isEmpty ? 'هذا الحقل مطلوب' : null,
               )
-            : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        isPassword ? '••••••••' : controller.text,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
-                ),
+            : Row(
+                children: [
+                  Icon(icon, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    isPassword ? '••••••••' : controller.text,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
+        const Divider(),
       ],
     );
   }
