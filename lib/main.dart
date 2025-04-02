@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:alson_education/screens/login_screen.dart';
-import 'package:alson_education/theme/app_theme.dart';
+import 'package:alson_education/screens/alson_education_login_screen.dart';
+import 'package:alson_education/theme/alson_education_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
