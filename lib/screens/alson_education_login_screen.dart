@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/database/alson_education_database.dart';
-import 'package:alson_education/screens/alson_education_home_screen.dart';
 import 'package:alson_education/models/alson_education_user.dart';
+import 'package:alson_education/screens/alson_education_home_screen.dart';
 
 class AlsonEducationLoginScreen extends StatefulWidget {
   const AlsonEducationLoginScreen({super.key});
@@ -29,11 +29,10 @@ class _AlsonEducationLoginScreenState extends State<AlsonEducationLoginScreen> {
 
     if (users.isNotEmpty) {
       final user = AlsonEducationUser.fromMap(users.first);
-      Navigator.pushReplacement(
+      Navigator.pushReplacementNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) => AlsonEducationHomeScreen(currentUser: user),
-        ),
+        '/home',
+        arguments: user,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,10 +80,10 @@ class _AlsonEducationLoginScreenState extends State<AlsonEducationLoginScreen> {
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: _login,
+                        child: const Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                         ),
-                        child: const Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
                       ),
               ],
             ),
