@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:alson_education/services/database_service.dart';
+import 'package:alson_education/services/auth_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import '../home_screen.dart';
+import '../../models/user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,14 +15,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  final AuthService _authService = AuthService();
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
-    final db = DatabaseService.instance;
-    final users = await db.query('users', where: 'username = ? AND password = ?', whereArgs: [_usernameController.text, _passwordController.text]);
-
-    if (users.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/home', arguments: users.first);
+    final user = await _authService.login(_usernameController.text, _passwordController.text);
+    if (user != null) {
+      Navigator.pushReplacementNamed(context, '/home', arguments: user.toMap());
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('بيانات غير صحيحة', style: TextStyle(color: Colors.red))));
     }
