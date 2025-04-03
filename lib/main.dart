@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'alson_education/screens/auth/login_screen.dart';
-import 'alson_education/screens/home_screen.dart';
-import 'alson_education/screens/profile_screen.dart';
-import 'alson_education/screens/content_screen.dart';
-import 'alson_education/screens/chat_screen.dart';
-import 'alson_education/screens/results_screen.dart';
-import 'alson_education/screens/help_screen.dart';
-import 'alson_education/screens/admin/admin_dashboard.dart';
-import 'alson_education/screens/admin/user_management.dart';
-import 'alson_education/screens/admin/content_management.dart';
-import 'alson_education/utils/colors.dart';
+import 'screens/auth/login_screen.dart'; // تحديث المسار
+import 'screens/home_screen.dart';
+import 'screens/user/profile_screen.dart';
+import 'screens/content_screen.dart';
+import 'screens/chat_screen.dart';
+import 'screens/results_screen.dart';
+import 'screens/help_screen.dart';
+import 'screens/admin/admin_dashboard.dart';
+import 'screens/admin/user_management.dart';
+import 'screens/admin/content_management.dart';
+import 'screens/user/user_dashboard.dart';
+import 'utils/colors.dart';
 
 void main() {
   runApp(const AlsonEducation());
@@ -30,6 +31,7 @@ class AlsonEducation extends StatelessWidget {
       home: const LoginScreen(),
       routes: {
         '/home': (context) => const HomeScreen(),
+        '/user/dashboard': (context) => const UserDashboard(),
         '/profile': (context) => const ProfileScreen(),
         '/content': (context) => const ContentScreen(),
         '/chat': (context) => const ChatScreen(),
