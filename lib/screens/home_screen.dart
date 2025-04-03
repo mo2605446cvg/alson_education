@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'profile_screen.dart';
-import 'content_screen.dart';
-import 'chat_screen.dart';
-import 'results_screen.dart';
-import 'help_screen.dart';
-import 'admin/admin_dashboard.dart';
-import 'widgets/custom_appbar.dart';
-import 'widgets/dashboard_card.dart';
+import 'package:alson_education/screens/content_screen.dart';
+import 'package:alson_education/screens/chat_screen.dart';
+import 'package:alson_education/screens/results_screen.dart';
+import 'package:alson_education/screens/help_screen.dart';
+import 'package:alson_education/screens/admin/admin_dashboard.dart';
+import 'package:alson_education/screens/widgets/custom_appbar.dart';
+import 'package:alson_education/screens/widgets/dashboard_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
