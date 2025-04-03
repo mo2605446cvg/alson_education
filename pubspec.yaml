@@ -1,54 +1,52 @@
 name: alson_education
-description: تطبيق الألسن للعلوم الحديثة - نظام إدارة تعليمي متكامل
+description: A new Flutter project for Alson Education.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.13.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
-  flutter_localizations:
-    sdk: flutter
 
-  # Database
-  sqflite: ^2.2.8+4
-  path: ^1.8.3
+  # مكتبات الـ UI والرسوم المتحركة
+  cupertino_icons: ^1.0.2
+  flutter_spinkit: ^5.2.0  # لعرض مؤشر التحميل
 
-  # File Management
-  file_picker: ^6.1.1
-  open_file: ^3.3.3
-  path_provider: ^2.1.1
+  # مكتبات إدارة قاعدة البيانات والتخزين
+  sqflite: ^2.3.0  # لقاعدة البيانات SQLite
+  path_provider: ^2.1.1  # للوصول إلى مسارات التخزين
+  flutter_secure_storage: ^8.0.0  # لتخزين البيانات الحساسة بأمان
 
-  # Excel Handling
-  excel: ^3.0.0
+  # مكتبات التعامل مع الملفات
+  file_picker: ^5.5.0  # لاختيار الملفات
+  excel: ^2.0.0  # لمعالجة ملفات Excel
 
-  # Networking & APIs
-  http: ^0.13.6
+  # مكتبات الشبكة والمعرفات
+  http: ^0.13.5  # للتعامل مع طلبات HTTP
+  uuid: ^3.0.7  # لتوليد معرفات فريدة
 
-  # UI & Helpers
-  provider: ^6.1.1
-  responsive_framework: ^0.2.0
-  flutter_svg: ^2.0.7
-
-  # Authentication & Security
-  uuid: ^3.0.7
-  shared_preferences: ^2.2.2
-
-  # Communication
-  url_launcher: ^6.1.11
-  flutter_email_sender: ^5.2.0
+  # مكتبات إضافية
+  intl: ^0.18.0  # لتنسيق التاريخ والوقت (مستخدم في ChatScreen)
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^2.0.0  # لتحليل الكود وتحسينه
 
 flutter:
+  uses-material-design: true
 
+  # إعداد الأصول (Assets)
   assets:
-    - assets/images/
-    - assets/icons/
-    - assets/documents/
+    - assets/img/icon.png
+    - assets/img/po.jpg
+
+  # يمكن إضافة خطوط مخصصة هنا إذا لزم الأمر
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
