@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'home_screen.dart';
+import 'package:alson_education/services/home_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({super.key});
