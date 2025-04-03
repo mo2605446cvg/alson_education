@@ -22,10 +22,20 @@ jobs:
           channel: 'stable'
       - run: flutter pub get
       - run: flutter build apk --release
-      - uses: actions/upload-artifact@3.1.3
+      - run: zip -r android-apk.zip build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload Android APK
+        uses: actions/github-script@v6
         with:
-          name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          script: |
+            const fs = require('fs');
+            const path = 'android-apk.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'android-apk',
+              path: path,
+              run_id: context.runId
+            });
 
   build-ios:
     runs-on: macos-latest
@@ -37,10 +47,20 @@ jobs:
           channel: 'stable'
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign
-      - uses: actions/upload-artifact@3.1.3
+      - run: zip -r ios-app.zip build/ios/iphoneos/Runner.app
+      - name: Upload iOS App
+        uses: actions/github-script@v6
         with:
-          name: ios-app
-          path: build/ios/iphoneos/Runner.app
+          script: |
+            const fs = require('fs');
+            const path = 'ios-app.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'ios-app',
+              path: path,
+              run_id: context.runId
+            });
 
   build-web:
     runs-on: ubuntu-latest
@@ -53,10 +73,20 @@ jobs:
       - run: flutter pub get
       - run: flutter config --enable-web
       - run: flutter build web
-      - uses: actions/upload-artifact@3.1.3
+      - run: zip -r web-app.zip build/web
+      - name: Upload Web App
+        uses: actions/github-script@v6
         with:
-          name: web-app
-          path: build/web
+          script: |
+            const fs = require('fs');
+            const path = 'web-app.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'web-app',
+              path: path,
+              run_id: context.runId
+            });
 
   build-windows:
     runs-on: windows-latest
@@ -69,10 +99,20 @@ jobs:
       - run: flutter pub get
       - run: flutter config --enable-windows-desktop
       - run: flutter build windows
-      - uses: actions/upload-artifact@3.1.3
+      - run: powershell -Command "Compress-Archive -Path build/windows/runner/Release -DestinationPath windows-app.zip"
+      - name: Upload Windows App
+        uses: actions/github-script@v6
         with:
-          name: windows-app
-          path: build/windows/runner/Release
+          script: |
+            const fs = require('fs');
+            const path = 'windows-app.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'windows-app',
+              path: path,
+              run_id: context.runId
+            });
 
   build-macos:
     runs-on: macos-latest
@@ -85,10 +125,20 @@ jobs:
       - run: flutter pub get
       - run: flutter config --enable-macos-desktop
       - run: flutter build macos
-      - uses: actions/upload-artifact@3.1.3
+      - run: zip -r macos-app.zip build/macos/Build/Products/Release
+      - name: Upload macOS App
+        uses: actions/github-script@v6
         with:
-          name: macos-app
-          path: build/macos/Build/Products/Release
+          script: |
+            const fs = require('fs');
+            const path = 'macos-app.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'macos-app',
+              path: path,
+              run_id: context.runId
+            });
 
   build-linux:
     runs-on: ubuntu-latest
@@ -103,7 +153,17 @@ jobs:
       - run: flutter pub get
       - run: flutter config --enable-linux-desktop
       - run: flutter build linux
-      - uses: actions/upload-artifact@3.1.3
+      - run: zip -r linux-app.zip build/linux/x64/release/bundle
+      - name: Upload Linux App
+        uses: actions/github-script@v6
         with:
-          name: linux-app
-          path: build/linux/x64/release/bundle
+          script: |
+            const fs = require('fs');
+            const path = 'linux-app.zip';
+            await github.rest.actions.uploadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'linux-app',
+              path: path,
+              run_id: context.runId
+            });
