@@ -19,6 +19,7 @@ class _ExcelUploaderState extends State<ExcelUploader> {
 
   Future<void> _uploadExcel() async {
     setState(() => _isLoading = true);
+
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
@@ -39,16 +40,17 @@ class _ExcelUploaderState extends State<ExcelUploader> {
       try {
         final excel = Excel.decodeBytes(bytes);
         final db = DatabaseService.instance;
+        final batch = await db.database.then((db) => db.batch());
 
         for (var table in excel.tables.keys) {
           final sheet = excel.tables[table]!;
-          for (var row in sheet.rows.skip(1)) {
+          for (var row in sheet.rows.skip(1)) { // تخطي العنوان
             if (row.length >= 2) {
               final username = row[0]?.value.toString() ?? '';
               final password = row[1]?.value.toString() ?? '';
               final code = const Uuid().v4().substring(0, 8);
 
-              await db.insert('users', {
+              batch.insert('users', {
                 'code': code,
                 'username': username,
                 'department': table,
@@ -59,6 +61,7 @@ class _ExcelUploaderState extends State<ExcelUploader> {
           }
         }
 
+        await batch.commit();
         widget.onUploadSuccess();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('تم رفع المستخدمين بنجاح', style: TextStyle(color: Colors.green))),
