@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/screens/home_screen.dart'; // استيراد من المجلد الأصلي
+import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -49,7 +49,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home', arguments: user.toMap()),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
