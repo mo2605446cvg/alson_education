@@ -4,6 +4,7 @@ import 'package:excel/excel.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
 
 class ExcelUploader extends StatefulWidget {
   final Function onUploadSuccess;
@@ -28,26 +29,26 @@ class _ExcelUploaderState extends State<ExcelUploader> {
 
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
-      final bytes = file.bytes;
-      if (bytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل في قراءة الملف', style: TextStyle(color: AppColors.errorColor))),
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
       try {
+        List<int> bytes;
+        if (file.bytes != null) {
+          bytes = file.bytes!;
+        } else if (file.path != null) {
+          bytes = await File(file.path!).readAsBytes();
+        } else {
+          throw Exception('لا يمكن قراءة الملف');
+        }
+
         final excel = Excel.decodeBytes(bytes);
         final db = DatabaseService.instance;
         final batch = await db.database.then((db) => db.batch());
 
         for (var table in excel.tables.keys) {
           final sheet = excel.tables[table]!;
-          for (var row in sheet.rows.skip(1)) { // تخطي العنوان
+          for (var row in sheet.rows.skip(1)) {
             if (row.length >= 2) {
-              final username = row[0]?.value.toString() ?? '';
-              final password = row[1]?.value.toString() ?? '';
+              final username = row[0]?.value?.toString() ?? 'غير معروف';
+              final password = row[1]?.value?.toString() ?? 'غير معروف';
               final code = const Uuid().v4().substring(0, 8);
 
               batch.insert('users', {
