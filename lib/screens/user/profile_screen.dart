@@ -17,14 +17,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    user = User.fromMap(args);
+    try {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+      if (args == null) {
+        Navigator.pushReplacementNamed(context, '/');
+        return;
+      }
+      user = User.fromMap(args);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ في تحميل بيانات المستخدم: $e', style: TextStyle(color: AppColors.errorColor))),
+      );
+      Navigator.pushReplacementNamed(context, '/');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(title: 'الملف الشخصي', user: user.toMap()),
+      backgroundColor: AppColors.secondaryColor,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -36,11 +48,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 340,
                 padding: EdgeInsets.all(15),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [Icon(Icons.person, color: AppColors.primaryColor), Text('الاسم: ${user.username}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
-                    Row(children: [Icon(Icons.lock, color: AppColors.primaryColor), Text('الكود: ${user.code}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
-                    Row(children: [Icon(Icons.group, color: AppColors.primaryColor), Text('القسم: ${user.department}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
-                    Row(children: [Icon(Icons.security, color: AppColors.primaryColor), Text('الدور: ${user.role}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
+                    Row(children: [
+                      Icon(Icons.person, color: AppColors.primaryColor),
+                      SizedBox(width: 10),
+                      Text('الاسم: ${user.username}', style: TextStyle(fontSize: 16, color: AppColors.textColor)),
+                    ]),
+                    SizedBox(height: 10),
+                    Row(children: [
+                      Icon(Icons.lock, color: AppColors.primaryColor),
+                      SizedBox(width: 10),
+                      Text('الكود: ${user.code}', style: TextStyle(fontSize: 16, color: AppColors.textColor)),
+                    ]),
+                    SizedBox(height: 10),
+                    Row(children: [
+                      Icon(Icons.group, color: AppColors.primaryColor),
+                      SizedBox(width: 10),
+                      Text('القسم: ${user.department}', style: TextStyle(fontSize: 16, color: AppColors.textColor)),
+                    ]),
+                    SizedBox(height: 10),
+                    Row(children: [
+                      Icon(Icons.security, color: AppColors.primaryColor),
+                      SizedBox(width: 10),
+                      Text('الدور: ${user.role}', style: TextStyle(fontSize: 16, color: AppColors.textColor)),
+                    ]),
                   ],
                 ),
               ),
@@ -48,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home', arguments: user.toMap()),
-              child: Text('عودة'),
+              child: Text('عودة', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
                 minimumSize: Size(200, 50),
