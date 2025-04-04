@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/screens/profile_screen.dart';
+import 'package:alson_education/screens/user/profile_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_screen.dart';
@@ -46,17 +46,17 @@ class _UserDashboardState extends State<UserDashboard> {
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/results'),
                   child: Text('عرض النتيجة'),
-                  style: ElevatedButton.styleFrom(primary: AppColors.primaryColor),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/content'),
                   child: Text('المحتوى'),
-                  style: ElevatedButton.styleFrom(primary: AppColors.accentColor),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/chat', arguments: user.toMap()),
                   child: Text('الشات'),
-                  style: ElevatedButton.styleFrom(primary: Colors.green),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
               ],
             ),
@@ -64,13 +64,13 @@ class _UserDashboardState extends State<UserDashboard> {
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/profile', arguments: user.toMap()),
               child: Text('الملف الشخصي'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/help'),
               child: Text('المساعدة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
             ),
           ],
         ),
