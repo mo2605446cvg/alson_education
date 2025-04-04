@@ -33,44 +33,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: CustomAppBar(title: 'الألسن للعلوم الحديثة', isAdmin: isAdmin, user: user.toMap()),
+      backgroundColor: AppColors.secondaryColor,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Text('مرحباً ${user.username}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primaryColor)),
-            DashboardCard(
-              title: 'جدول قسم ${user.department}',
-              child: Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Text('مرحباً ${user.username}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primaryColor)),
+              SizedBox(height: 20),
+              DashboardCard(
+                title: 'جدول قسم ${user.department}',
+                child: Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/results'),
+                    child: Text('عرض النتيجة', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/content'),
+                    child: Text('المحتوى', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/chat', arguments: user.toMap()),
+                    child: Text('الشات', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  ),
+                ],
+              ),
+              if (isAdmin) SizedBox(height: 20),
+              if (isAdmin)
                 ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/results'),
-                  child: Text('عرض النتيجة'),
+                  onPressed: () => Navigator.pushNamed(context, '/admin/dashboard'),
+                  child: Text('لوحة التحكم الإدارية', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
                 ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/content'),
-                  child: Text('المحتوى'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/chat', arguments: user.toMap()),
-                  child: Text('الشات'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                ),
-              ],
-            ),
-            if (isAdmin) SizedBox(height: 20),
-            if (isAdmin)
-              ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/admin/dashboard'),
-                child: Text('لوحة التحكم الإدارية'),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
