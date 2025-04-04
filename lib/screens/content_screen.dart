@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'home_screen.dart';
+import 'package:alson_education/screens/home_screen.dart';
 
 class ContentScreen extends StatefulWidget {
   const ContentScreen({super.key});
