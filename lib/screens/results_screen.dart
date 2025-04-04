@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'homepackage:alson_education/screens/home_screen.dart';
+import 'package:alson_education/screens/home_screen.dart'; // تعديل الاستيراد
 import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ResultsScreen extends StatefulWidget {
