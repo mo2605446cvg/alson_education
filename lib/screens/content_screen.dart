@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ContentScreen extends StatefulWidget {
   const ContentScreen({super.key});
@@ -11,7 +12,7 @@ class ContentScreen extends StatefulWidget {
 }
 
 class _ContentScreenState extends State<ContentScreen> {
-  late List<Map<String, dynamic>> contents;
+  List<Map<String, dynamic>> contents = []; // تغيير إلى قائمة فارغة مبدئيًا
 
   @override
   void initState() {
@@ -28,10 +29,7 @@ class _ContentScreenState extends State<ContentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('المحتوى التعليمي', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'المحتوى التعليمي'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -56,7 +54,6 @@ class _ContentScreenState extends State<ContentScreen> {
                             Text('تاريخ الرفع: ${content['upload_date']}', style: TextStyle(fontSize: 14)),
                             ElevatedButton(
                               onPressed: () {
-                                // افتراضيًا، يمكن فتح الملف إذا كان موجودًا
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('عرض الملف غير مدعوم حاليًا')));
                               },
                               child: Text('عرض'),
@@ -72,7 +69,10 @@ class _ContentScreenState extends State<ContentScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home'),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
