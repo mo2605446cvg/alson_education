@@ -19,36 +19,59 @@ class _ExcelUploaderState extends State<ExcelUploader> {
 
   Future<void> _uploadExcel() async {
     setState(() => _isLoading = true);
-    final result = await FilePicker.platform.pickFiles(allowedExtensions: ['xlsx']);
-    if (result != null) {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['xlsx'],
+    );
+
+    if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
       final bytes = file.bytes;
-      final excel = Excel.decodeBytes(bytes!);
-
-      final db = DatabaseService.instance;
-      for (var table in excel.tables.keys) {
-        final sheet = excel.tables[table]!;
-        for (var row in sheet.rows.skip(1)) {
-          if (row.length >= 2) {
-            final username = row[0]?.value.toString() ?? '';
-            final password = row[1]?.value.toString() ?? '';
-            final code = const Uuid().v4().substring(0, 8);
-
-            await db.insert('users', {
-              'code': code,
-              'username': username,
-              'department': table,
-              'role': 'user',
-              'password': password,
-            });
-          }
-        }
+      if (bytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل في قراءة الملف', style: TextStyle(color: AppColors.errorColor))),
+        );
+        setState(() => _isLoading = false);
+        return;
       }
 
-      widget.onUploadSuccess();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم رفع المستخدمين بنجاح', style: TextStyle(color: Colors.green))));
+      try {
+        final excel = Excel.decodeBytes(bytes);
+        final db = DatabaseService.instance;
+
+        for (var table in excel.tables.keys) {
+          final sheet = excel.tables[table]!;
+          for (var row in sheet.rows.skip(1)) {
+            if (row.length >= 2) {
+              final username = row[0]?.value.toString() ?? '';
+              final password = row[1]?.value.toString() ?? '';
+              final code = const Uuid().v4().substring(0, 8);
+
+              await db.insert('users', {
+                'code': code,
+                'username': username,
+                'department': table,
+                'role': 'user',
+                'password': password,
+              });
+            }
+          }
+        }
+
+        widget.onUploadSuccess();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تم رفع المستخدمين بنجاح', style: TextStyle(color: Colors.green))),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل في معالجة الملف: $e', style: TextStyle(color: AppColors.errorColor))),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('لم يتم اختيار ملف', style: TextStyle(color: Colors.red))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('لم يتم اختيار ملف', style: TextStyle(color: AppColors.errorColor))),
+      );
     }
     setState(() => _isLoading = false);
   }
@@ -57,16 +80,22 @@ class _ExcelUploaderState extends State<ExcelUploader> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ElevatedButton(
-          onPressed: _isLoading ? null : _uploadExcel,
-          child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('رفع ملف Excel'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
-            minimumSize: Size(200, 50),
-          ),
+        _isLoading
+            ? CircularProgressIndicator(color: AppColors.primaryColor)
+            : ElevatedButton(
+                onPressed: _uploadExcel,
+                child: Text('رفع ملف Excel', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  minimumSize: Size(200, 50),
+                ),
+              ),
+        SizedBox(height: 10),
+        Text(
+          'الصيغة: العمود الأول: اسم المستخدم، العمود الثاني: كلمة المرور، اسم الورقة: القسم',
+          style: TextStyle(fontSize: 14, color: AppColors.textColor),
+          textAlign: TextAlign.center,
         ),
-        Text('الصيغة: العمود الأول: اسم المستخدم، العمود الثاني: كلمة المرور، اسم الورقة: القسم',
-            style: TextStyle(fontSize: 14, color: Colors.grey)),
       ],
     );
   }
