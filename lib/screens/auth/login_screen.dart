@@ -55,7 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 : ElevatedButton(
                     onPressed: _login,
                     child: Text('تسجيل الدخول'),
-                    style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      minimumSize: Size(200, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
             TextButton(onPressed: () {}, child: Text('هل نسيت كلمة المرور؟', style: TextStyle(color: AppColors.primaryColor))),
           ],
