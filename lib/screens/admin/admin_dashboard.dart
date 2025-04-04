@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/screens/home_screen.dart';
-import 'userpackage:alson_education/screens/admin/user_management.dart';
+import 'package:alson_education/screens/home_screen.dart'; // استيراد صحيح
+import 'package:alson_education/screens/admin/user_management.dart'; // تعديل الاستيراد
 import 'package:alson_education/screens/admin/content_management.dart';
 import 'package:alson_education/widgets/custom_appbar.dart';
 
