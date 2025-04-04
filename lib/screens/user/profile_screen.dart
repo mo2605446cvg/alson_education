@@ -13,27 +13,40 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late User user;
+  bool _isLoading = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    try {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
-      if (args == null) {
-        Navigator.pushReplacementNamed(context, '/');
-        return;
-      }
-      user = User.fromMap(args);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في تحميل بيانات المستخدم: $e', style: TextStyle(color: AppColors.errorColor))),
-      );
-      Navigator.pushReplacementNamed(context, '/');
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    if (args == null) {
+      _handleError('لا توجد بيانات مستخدم');
+      return;
     }
+    try {
+      user = User.fromMap(args);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      _handleError('خطأ في تحميل بيانات المستخدم: $e');
+    }
+  }
+
+  void _handleError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: TextStyle(color: AppColors.errorColor))),
+    );
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.secondaryColor,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
+      );
+    }
+
     return Scaffold(
       appBar: CustomAppBar(title: 'الملف الشخصي', user: user.toMap()),
       backgroundColor: AppColors.secondaryColor,
@@ -79,7 +92,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/home', arguments: user.toMap()),
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacementNamed(context, '/home', arguments: user.toMap());
+                }
+              },
               child: Text('عودة', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
