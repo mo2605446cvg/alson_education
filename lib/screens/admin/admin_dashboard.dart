@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/admin/user_management.dart';
-import 'package:alson_educational/screens/admin/content_management.dart';
+import 'package:alson_education/screens/admin/content_management.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
