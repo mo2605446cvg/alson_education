@@ -3,6 +3,7 @@ import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -34,8 +35,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     if (selectedReceiver != null) {
       final db = DatabaseService.instance;
-      messages = await db.query('chat', where: '(sender_code = ? AND receiver_code = ?) OR (sender_code = ? AND receiver_code = ?)',
-          whereArgs: [currentUser['code'], selectedReceiver, selectedReceiver, currentUser['code']], orderBy: 'timestamp');
+      messages = await db.query(
+        'chat',
+        where: '(sender_code = ? AND receiver_code = ?) OR (sender_code = ? AND receiver_code = ?)',
+        whereArgs: [currentUser['code'], selectedReceiver, selectedReceiver, currentUser['code']],
+        orderBy: 'timestamp',
+      );
       setState(() {});
     }
   }
@@ -57,10 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('الشات', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'الشات'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -68,7 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
             DropdownButton<String>(
               value: selectedReceiver,
               hint: Text('اختر المستخدم'),
-              items: users.map((user) => DropdownMenuItem(value: user['code'], child: Text(user['username']))).toList(),
+              items: users.map((user) => DropdownMenuItem<String>(value: user['code'] as String, child: Text(user['username'] as String))).toList(),
               onChanged: (value) {
                 setState(() {
                   selectedReceiver = value;
@@ -117,7 +119,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home', arguments: currentUser),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
