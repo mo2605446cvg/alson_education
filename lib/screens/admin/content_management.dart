@@ -4,6 +4,7 @@ import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ContentManagementScreen extends StatefulWidget {
   const ContentManagementScreen({super.key});
@@ -42,10 +43,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('رفع المحتوى', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'رفع المحتوى'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -58,14 +56,20 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
             ElevatedButton(
               onPressed: _uploadContent,
               child: Text('اختر ملف'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
             Text('الصيغ المدعومة: PDF, صور (PNG, JPG), نصوص (TXT)', style: TextStyle(fontSize: 14, color: Colors.grey)),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home'),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.accentColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
