@@ -28,6 +28,7 @@ dependencies:
   uuid: ^3.0.7  # لتوليد معرفات فريدة
 
   # مكتبات إضافية
+  url_launcher: ^6.1.10
   intl: ^0.18.0  # لتنسيق التاريخ والوقت (مستخدم في ChatScreen)
 
 dev_dependencies:
