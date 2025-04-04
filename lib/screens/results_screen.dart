@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/screens/home_screen.dart';
+import 'homepackage:alson_education/screens/home_screen.dart';
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({super.key});
@@ -23,10 +24,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('استعلام النتائج', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'استعلام النتائج'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -54,7 +52,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
             ElevatedButton(
               onPressed: _showResults,
               child: Text('عرض النتيجة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
@@ -71,10 +72,7 @@ class ShowResultsScreen extends StatelessWidget {
     final results = {"math": "85/100", "science": "92/100", "arabic": "88/100"};
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('نتائج الامتحانات', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'نتائج الامتحانات'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -100,7 +98,10 @@ class ShowResultsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
