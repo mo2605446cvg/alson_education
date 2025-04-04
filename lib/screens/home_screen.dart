@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'profile_screen.dart';
+import 'package:alson_education/screens/user/profile_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_screen.dart';
@@ -49,17 +49,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/results'),
                   child: Text('عرض النتيجة'),
-                  style: ElevatedButton.styleFrom(primary: AppColors.primaryColor),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/content'),
                   child: Text('المحتوى'),
-                  style: ElevatedButton.styleFrom(primary: AppColors.accentColor),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/chat', arguments: user.toMap()),
                   child: Text('الشات'),
-                  style: ElevatedButton.styleFrom(primary: Colors.green),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
               ],
             ),
@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, '/admin/dashboard'),
                 child: Text('لوحة التحكم الإدارية'),
-                style: ElevatedButton.styleFrom(primary: AppColors.primaryColor),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
               ),
           ],
         ),
