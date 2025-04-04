@@ -28,8 +28,8 @@ class _ExcelUploaderState extends State<ExcelUploader> {
       final db = DatabaseService.instance;
       for (var table in excel.tables.keys) {
         final sheet = excel.tables[table]!;
-        for (var row in sheet.rows.skip(1)) { // تخطي العنوان
-          if (row.length >= 2) { // التأكد من وجود بيانات كافية
+        for (var row in sheet.rows.skip(1)) {
+          if (row.length >= 2) {
             final username = row[0]?.value.toString() ?? '';
             final password = row[1]?.value.toString() ?? '';
             final code = const Uuid().v4().substring(0, 8);
@@ -37,7 +37,7 @@ class _ExcelUploaderState extends State<ExcelUploader> {
             await db.insert('users', {
               'code': code,
               'username': username,
-              'department': table, // اسم الورقة كقسم
+              'department': table,
               'role': 'user',
               'password': password,
             });
@@ -60,7 +60,10 @@ class _ExcelUploaderState extends State<ExcelUploader> {
         ElevatedButton(
           onPressed: _isLoading ? null : _uploadExcel,
           child: _isLoading ? CircularProgressIndicator(color: Colors.white) : Text('رفع ملف Excel'),
-          style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryColor,
+            minimumSize: Size(200, 50),
+          ),
         ),
         Text('الصيغة: العمود الأول: اسم المستخدم، العمود الثاني: كلمة المرور، اسم الورقة: القسم',
             style: TextStyle(fontSize: 14, color: Colors.grey)),
