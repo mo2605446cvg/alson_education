@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:alson_education/services/database_service.dart';
+import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,21 +12,19 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late Map<String, dynamic> user;
+  late User user;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    user = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    user = User.fromMap(args);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('الملف الشخصي', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primaryColor,
-      ),
+      appBar: CustomAppBar(title: 'الملف الشخصي', user: user.toMap()),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -38,18 +37,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.all(15),
                 child: Column(
                   children: [
-                    Row(children: [Icon(Icons.person, color: AppColors.primaryColor), Text('الاسم: ${user['username']}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
-                    Row(children: [Icon(Icons.lock, color: AppColors.primaryColor), Text('الكود: ${user['code']}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
-                    Row(children: [Icon(Icons.group, color: AppColors.primaryColor), Text('القسم: ${user['department']}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
+                    Row(children: [Icon(Icons.person, color: AppColors.primaryColor), Text('الاسم: ${user.username}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
+                    Row(children: [Icon(Icons.lock, color: AppColors.primaryColor), Text('الكود: ${user.code}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
+                    Row(children: [Icon(Icons.group, color: AppColors.primaryColor), Text('القسم: ${user.department}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
+                    Row(children: [Icon(Icons.security, color: AppColors.primaryColor), Text('الدور: ${user.role}', style: TextStyle(fontSize: 16, color: AppColors.textColor))]),
                   ],
                 ),
               ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/home', arguments: user),
+              onPressed: () => Navigator.pushNamed(context, '/home', arguments: user.toMap()),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(primary: AppColors.primaryColor, minimumSize: Size(200, 50)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                minimumSize: Size(200, 50),
+              ),
             ),
           ],
         ),
