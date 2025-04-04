@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/auth_service.dart';
 import 'package:alson_education/utils/colors.dart';
-import '../home_screen.dart';
-import '../../models/user.dart';
+import 'package:alson_education/screens/home_screen.dart';
+import 'package:alson_education/models/user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
