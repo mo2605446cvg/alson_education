@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/utils/colors.dart';
-import '../home_screen.dart'; // استيراد من المجلد الأصلي
-import '../../widgets/custom_appbar.dart';
+import 'package:alson_education/screens/home_screen.dart'; // استيراد من المجلد الأصلي
+import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
