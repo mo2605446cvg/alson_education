@@ -39,7 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
         'chat',
         where: '(sender_code = ? AND receiver_code = ?) OR (sender_code = ? AND receiver_code = ?)',
         whereArgs: [currentUser['code'], selectedReceiver, selectedReceiver, currentUser['code']],
-        orderBy: 'timestamp',
+        orderBy: 'timestamp', // المعامل ضمن قاموس query
       );
       setState(() {});
     }
