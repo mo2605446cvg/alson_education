@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:alson_education/utils/constants.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -10,7 +11,7 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('alson_education.db');
+    _database = await _initDB(AppConstants.databaseName);
     return _database!;
   }
 
@@ -51,14 +52,24 @@ class DatabaseService {
     )
     ''');
 
-    // إضافة أدمن افتراضي
     await db.execute(
-        "INSERT OR IGNORE INTO users (code, username, department, role, password) VALUES ('admin123', 'Admin', 'إدارة', 'admin', 'adminpass')");
+        "INSERT OR IGNORE INTO users (code, username, department, role, password) VALUES (?, ?, ?, ?, ?)",
+        [AppConstants.defaultAdminCode, AppConstants.defaultAdminUsername, AppConstants.defaultAdminDepartment, 'admin', AppConstants.defaultAdminPassword]);
   }
 
-  Future<List<Map<String, dynamic>>> query(String table, {String? where, List<dynamic>? whereArgs}) async {
+  Future<List<Map<String, dynamic>>> query(
+    String table, {
+    String? where,
+    List<dynamic>? whereArgs,
+    String? orderBy, // تأكد إن orderBy موجود هنا
+  }) async {
     final db = await database;
-    return await db.query(table, where: where, whereArgs: whereArgs);
+    return await db.query(
+      table,
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: orderBy,
+    );
   }
 
   Future<int> insert(String table, Map<String, dynamic> values) async {
