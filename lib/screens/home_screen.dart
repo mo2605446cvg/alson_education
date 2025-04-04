@@ -7,8 +7,8 @@ import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_screen.dart';
 import 'package:alson_education/screens/help_screen.dart';
 import 'package:alson_education/screens/admin/admin_dashboard.dart';
-import 'package:alson_education/screens/widgets/custom_appbar.dart';
-import 'package:alson_education/screens/widgets/dashboard_card.dart';
+import 'package:alson_education/widgets/custom_appbar.dart';
+import 'package:alson_education/widgets/dashboard_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
