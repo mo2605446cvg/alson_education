@@ -4,7 +4,7 @@ import 'package:alson_education/models/user.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/services/notification_service.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/utils/theme.dart'; // استيراد ThemeProvider
+import 'package:alson_education/utils/theme.dart'; // تأكد من الاستيراد
 import 'package:alson_education/screens/user/profile_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
