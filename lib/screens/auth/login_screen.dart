@@ -5,7 +5,7 @@ import 'package:alson_education/services/notification_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'package:alson_education/screens/models/user.dart';
+import 'package:alson_education/models/user.dart';
 import 'dart:math';
 
 class LoginScreen extends StatefulWidget {
