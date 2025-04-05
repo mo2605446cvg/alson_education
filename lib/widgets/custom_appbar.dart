@@ -5,8 +5,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool isAdmin;
   final Map<String, dynamic>? user;
+  final List<Widget>? actions;
 
-  const CustomAppBar({super.key, required this.title, this.isAdmin = false, this.user});
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    this.isAdmin = false,
+    this.user,
+    this.actions,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -14,12 +21,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(title, style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
       backgroundColor: AppColors.primaryColor,
       leading: Icon(Icons.school, color: Colors.white, size: 30),
-      actions: [
+      actions: actions ?? [
         PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert),
+          icon: const Icon(Icons.more_vert),
           onSelected: (String result) {
             switch (result) {
               case 'profile':
@@ -49,15 +56,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             }
           },
           itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-            if (isAdmin)
-              PopupMenuItem<String>(value: 'manageUsers', child: Text('إدارة المستخدمين')),
-            if (isAdmin) PopupMenuItem<String>(value: 'uploadContent', child: Text('رفع المحتوى')),
-            PopupMenuItem<String>(value: 'profile', child: Text('الملف الشخصي')),
-            PopupMenuItem<String>(value: 'results', child: Text('النتيجة')),
-            PopupMenuItem<String>(value: 'content', child: Text('المحتوى')),
-            PopupMenuItem<String>(value: 'chat', child: Text('الشات')),
-            PopupMenuItem<String>(value: 'help', child: Text('المساعدة')),
-            PopupMenuItem<String>(value: 'logout', child: Text('تسجيل الخروج')),
+            if (isAdmin) const PopupMenuItem<String>(value: 'manageUsers', child: Text('إدارة المستخدمين')),
+            if (isAdmin) const PopupMenuItem<String>(value: 'uploadContent', child: Text('رفع المحتوى')),
+            const PopupMenuItem<String>(value: 'profile', child: Text('الملف الشخصي')),
+            const PopupMenuItem<String>(value: 'results', child: Text('النتيجة')),
+            const PopupMenuItem<String>(value: 'content', child: Text('المحتوى')),
+            const PopupMenuItem<String>(value: 'chat', child: Text('الشات')),
+            const PopupMenuItem<String>(value: 'help', child: Text('المساعدة')),
+            const PopupMenuItem<String>(value: 'logout', child: Text('تسجيل الخروج')),
           ],
         ),
       ],
