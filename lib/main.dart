@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:alson_education/screens/auth/login_screen.dart'; // تحديث المسار
+import 'package:provider/provider.dart';
+import 'package:alson_education/screens/auth/login_screen.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/user/profile_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
@@ -10,10 +11,31 @@ import 'package:alson_education/screens/admin/admin_dashboard.dart';
 import 'package:alson_education/screens/admin/user_management.dart';
 import 'package:alson_education/screens/admin/content_management.dart';
 import 'package:alson_education/screens/user/user_dashboard.dart';
-import 'package:alson_education/utils/colors.dart';
+import 'package:alson_education/utils/theme.dart';
+import 'package:alson_education/services/notification_service.dart';
 
-void main() {
-  runApp(const AlsonEducation());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const AlsonEducation(),
+    ),
+  );
+}
+
+class ThemeProvider with ChangeNotifier {
+  bool _isDarkMode = false;
+
+  bool get isDarkMode => _isDarkMode;
+
+  ThemeData get theme => _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
 }
 
 class AlsonEducation extends StatelessWidget {
@@ -21,26 +43,26 @@ class AlsonEducation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Alson Education',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        scaffoldBackgroundColor: AppColors.secondaryColor,
-      ),
-      home: const LoginScreen(),
-      routes: {
-        '/home': (context) => const HomeScreen(),
-        '/user/dashboard': (context) => const UserDashboard(),
-        '/profile': (context) => const ProfileScreen(),
-        '/content': (context) => const ContentScreen(),
-        '/chat': (context) => const ChatScreen(),
-        '/results': (context) => const ResultsScreen(),
-        '/show_results': (context) => const ShowResultsScreen(),
-        '/help': (context) => const HelpScreen(),
-        '/admin/dashboard': (context) => const AdminDashboard(),
-        '/admin/users': (context) => const UserManagementScreen(),
-        '/admin/content': (context) => const ContentManagementScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Alson Education',
+          theme: themeProvider.theme,
+          home: const LoginScreen(),
+          routes: {
+            '/home': (context) => const HomeScreen(),
+            '/user/dashboard': (context) => const UserDashboard(),
+            '/profile': (context) => const ProfileScreen(),
+            '/content': (context) => const ContentScreen(),
+            '/chat': (context) => const ChatScreen(),
+            '/results': (context) => const ResultsScreen(),
+            '/show_results': (context) => const ShowResultsScreen(),
+            '/help': (context) => const HelpScreen(),
+            '/admin/dashboard': (context) => const AdminDashboard(),
+            '/admin/users': (context) => const UserManagementScreen(),
+            '/admin/content': (context) => const ContentManagementScreen(),
+          },
+        );
       },
     );
   }
