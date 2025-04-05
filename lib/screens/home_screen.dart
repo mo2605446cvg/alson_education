@@ -4,7 +4,7 @@ import 'package:alson_education/models/user.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/services/notification_service.dart';
 import 'package:alson_education/utils/colors.dart';
-import 'package:alson_education/utils/theme.dart';
+import 'package:alson_education/utils/theme.dart'; // استيراد ThemeProvider
 import 'package:alson_education/screens/user/profile_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _earnPoints(String action) async {
     final db = DatabaseService.instance;
-    await db.addPoints(user.code, 10); // 10 نقاط لكل نشاط
+    await db.addPoints(user.code, 10);
     await NotificationService().scheduleSmartNotification(user.code, action);
     await _loadPoints();
   }
