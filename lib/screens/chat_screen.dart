@@ -3,6 +3,7 @@ import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/utils/colors.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'package:alson_education/widgets/custom_appbar.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -18,61 +19,52 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   List<Map<String, dynamic>> messages = [];
   List<Map<String, dynamic>> users = [];
-  bool _isLoading = true;
+  late StreamController<List<Map<String, dynamic>>> _messageStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageStream = StreamController<List<Map<String, dynamic>>>.broadcast();
+    _loadUsers();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
-    if (args == null) {
-      _handleError('لا توجد بيانات مستخدم');
-      return;
-    }
-    currentUser = args;
-    _loadUsers();
+    currentUser = args ?? {'code': 'guest', 'username': 'Guest', 'department': 'غير محدد', 'role': 'user', 'password': ''};
   }
 
   Future<void> _loadUsers() async {
     final db = DatabaseService.instance;
-    try {
-      users = await db.query('users', where: 'code != ?', whereArgs: [currentUser['code']]);
-      setState(() {
-        _isLoading = false;
-      });
-      if (selectedReceiver != null) {
-        _loadMessages();
-      }
-    } catch (e) {
-      _handleError('فشل في تحميل المستخدمين: $e');
-    }
+    users = await db.query('users', where: 'code != ?', whereArgs: [currentUser['code']]);
+    setState(() {});
+    _startMessagePolling();
   }
 
   Future<void> _loadMessages() async {
-    if (selectedReceiver == null) return;
-    final db = DatabaseService.instance;
-    try {
-      messages = await db.query(
+    if (selectedReceiver != null) {
+      final db = DatabaseService.instance;
+      final fetchedMessages = await db.query(
         'chat',
         where: '(sender_code = ? AND receiver_code = ?) OR (sender_code = ? AND receiver_code = ?)',
         whereArgs: [currentUser['code'], selectedReceiver, selectedReceiver, currentUser['code']],
         orderBy: 'timestamp ASC',
       );
-      setState(() {});
-    } catch (e) {
-      _handleError('فشل في تحميل الرسائل: $e');
+      _messageStream.add(fetchedMessages);
+      setState(() => messages = fetchedMessages);
     }
   }
 
-  Future<void> _sendMessage() async {
-    if (selectedReceiver == null || _messageController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى اختيار مستلم وكتابة رسالة', style: TextStyle(color: AppColors.errorColor))),
-      );
-      return;
-    }
+  void _startMessagePolling() {
+    Timer.periodic(Duration(seconds: 2), (timer) async {
+      if (mounted) await _loadMessages();
+    });
+  }
 
-    final db = DatabaseService.instance;
-    try {
+  Future<void> _sendMessage() async {
+    if (selectedReceiver != null && _messageController.text.trim().isNotEmpty) {
+      final db = DatabaseService.instance;
       await db.insert('chat', {
         'sender_code': currentUser['code'],
         'receiver_code': selectedReceiver!,
@@ -81,40 +73,23 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _messageController.clear();
       await _loadMessages();
-    } catch (e) {
-      _handleError('فشل في إرسال الرسالة: $e');
     }
-  }
-
-  void _handleError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message, style: TextStyle(color: AppColors.errorColor))),
-    );
-    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.secondaryColor,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
-      );
-    }
-
     return Scaffold(
       appBar: CustomAppBar(title: 'الشات'),
-      backgroundColor: AppColors.secondaryColor,
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             DropdownButton<String>(
               value: selectedReceiver,
-              hint: Text('اختر المستخدم', style: TextStyle(color: AppColors.textColor)),
+              hint: Text('اختر المستخدم'),
               items: users.map((user) => DropdownMenuItem<String>(
                 value: user['code'] as String,
-                child: Text(user['username'] as String, style: TextStyle(color: AppColors.textColor)),
+                child: Text(user['username'] as String),
               )).toList(),
               onChanged: (value) {
                 setState(() {
@@ -124,36 +99,42 @@ class _ChatScreenState extends State<ChatScreen> {
               },
               isExpanded: true,
               borderRadius: BorderRadius.circular(15),
-              dropdownColor: Colors.white,
             ),
             SizedBox(height: 10),
             Expanded(
-              child: messages.isEmpty
-                  ? Center(child: Text('لا توجد رسائل بعد', style: TextStyle(color: AppColors.textColor)))
-                  : ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = messages[index];
-                        final isSentByMe = msg['sender_code'] == currentUser['code'];
-                        return Container(
-                          margin: EdgeInsets.symmetric(vertical: 5),
-                          child: Align(
-                            alignment: isSentByMe ? Alignment.topRight : Alignment.topLeft,
-                            child: Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isSentByMe ? Colors.grey[200] : Colors.blue[50],
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${msg['message']} - ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(msg['timestamp']))}',
-                                style: TextStyle(color: isSentByMe ? AppColors.textColor : Colors.blue),
-                              ),
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: _messageStream.stream,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('لا توجد رسائل بعد'));
+                  }
+                  final messages = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      final isSentByMe = msg['sender_code'] == currentUser['code'];
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 5),
+                        child: Align(
+                          alignment: isSentByMe ? Alignment.topRight : Alignment.topLeft,
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isSentByMe ? Colors.grey[200] : Colors.blue[50],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${msg['message']} - ${DateFormat('HH:mm').format(DateTime.parse(msg['timestamp']))}',
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
             Row(
               children: [
@@ -163,8 +144,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     decoration: InputDecoration(
                       labelText: 'اكتب رسالتك',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                   ),
                 ),
@@ -177,18 +156,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                } else {
-                  Navigator.pushReplacementNamed(context, '/home', arguments: currentUser);
-                }
-              },
-              child: Text('عودة', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                minimumSize: Size(200, 50),
-              ),
+              onPressed: () => Navigator.pushNamed(context, '/home', arguments: currentUser),
+              child: Text('عودة'),
+              style: ElevatedButton.styleFrom(minimumSize: Size(200, 50)),
             ),
           ],
         ),
@@ -199,6 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _messageStream.close();
     super.dispose();
   }
 }
