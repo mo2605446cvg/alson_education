@@ -42,7 +42,12 @@ class ViewResultsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               child: Text('عودة'),
-              style: ElevatedButton.styleFrom(backgroundColor: PRIMARY_COLOR, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PRIMARY_COLOR,
+                foregroundColor: Colors.white,
+                minimumSize: Size(200, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ],
         ),
