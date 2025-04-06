@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/screens/login_screen.dart';
-import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/profile_screen.dart';
 import 'package:alson_education/screens/admin_users_screen.dart';
@@ -9,11 +8,9 @@ import 'package:alson_education/screens/upload_content_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_query_screen.dart';
-import 'package:alson_education/screens/view_results_screen.dar';
+import 'package:alson_education/screens/view_results_screen.dart';
 import 'package:alson_education/screens/help_screen.dart';
-import 'package:alson_education/widgets/app_bar_widget.dart';
-import 'package:alson_education/widgets/custom_button.dart';
-import 'package:alson_education/widgets/custom_card.dart';
+import 'package:alson_education/providers/app_state_provider.dart';
 
 void main() {
   runApp(AlsonEducation());
