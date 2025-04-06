@@ -65,17 +65,26 @@ class HomeScreen extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/results'),
                   child: Text('عرض النتيجة'),
-                  style: ElevatedButton.styleFrom(primary: PRIMARY_COLOR, onPrimary: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: PRIMARY_COLOR,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/content'),
                   child: Text('المحتوى'),
-                  style: ElevatedButton.styleFrom(primary: ACCENT_COLOR, onPrimary: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ACCENT_COLOR,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pushNamed(context, '/chat'),
                   child: Text('الشات'),
-                  style: ElevatedButton.styleFrom(primary: Colors.green, onPrimary: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),
