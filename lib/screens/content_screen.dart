@@ -6,8 +6,10 @@ import 'package:alson_education/constants/strings.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 
 class ContentScreen extends StatefulWidget {
+  const ContentScreen({super.key});
+
   @override
-  _ContentScreenState createState() => _ContentScreenState();
+  State<ContentScreen> createState() => _ContentScreenState();
 }
 
 class _ContentScreenState extends State<ContentScreen> {
@@ -31,37 +33,53 @@ class _ContentScreenState extends State<ContentScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.get('content', appState.language))),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(labelText: AppStrings.get('search', appState.language), border: OutlineInputBorder()),
-              onChanged: (value) => loadLessons(value),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: lessons.length,
-              itemBuilder: (context, index) {
-                final lesson = lessons[index];
-                return ListTile(
-                  title: Text(lesson.title),
-                  subtitle: Text(lesson.category),
-                  trailing: IconButton(
-                    icon: Icon(lesson.isFavorite ? Icons.favorite : Icons.favorite_border),
-                    onPressed: () async {
-                      await DatabaseService.instance.toggleFavoriteLesson(lesson.id);
-                      loadLessons(_searchController.text);
-                    },
+      appBar: AppBar(
+        title: Text(AppStrings.get('content', appState.language)),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: AppStrings.get('search', appState.language),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                   ),
-                );
-              },
+                  onChanged: (value) => loadLessons(value),
+                ),
+                const SizedBox(height: 20),
+                lessons.isEmpty
+                    ? const Text('No lessons found', textAlign: TextAlign.center)
+                    : SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        child: ListView.builder(
+                          itemCount: lessons.length,
+                          itemBuilder: (context, index) {
+                            final lesson = lessons[index];
+                            return ListTile(
+                              title: Text(lesson.title, textAlign: TextAlign.center),
+                              subtitle: Text(lesson.category, textAlign: TextAlign.center),
+                              trailing: IconButton(
+                                icon: Icon(lesson.isFavorite ? Icons.favorite : Icons.favorite_border),
+                                onPressed: () async {
+                                  await DatabaseService.instance.toggleFavoriteLesson(lesson.id);
+                                  loadLessons(_searchController.text);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
