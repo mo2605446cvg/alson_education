@@ -1,26 +1,10 @@
-import 'package:hive/hive.dart';
-
-part 'lesson.g.dart';
-
-@HiveType(typeId: 2)
 class Lesson {
-  @HiveField(0)
   final String id;
-
-  @HiveField(1)
   final String title;
-
-  @HiveField(2)
   final String content;
-
-  @HiveField(3)
   final String category;
-
-  @HiveField(4)
   final String level;
-
-  @HiveField(5)
-  bool isFavorite;
+  final bool isFavorite;
 
   Lesson({
     required this.id,
@@ -30,4 +14,26 @@ class Lesson {
     required this.level,
     this.isFavorite = false,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'content': content,
+      'category': category,
+      'level': level,
+      'is_favorite': isFavorite ? 1 : 0,
+    };
+  }
+
+  factory Lesson.fromMap(Map<String, dynamic> map) {
+    return Lesson(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      content: map['content'] as String,
+      category: map['category'] as String,
+      level: map['level'] as String,
+      isFavorite: (map['is_favorite'] as int) == 1,
+    );
+  }
 }
