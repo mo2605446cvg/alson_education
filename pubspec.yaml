@@ -17,6 +17,7 @@ dependencies:
   file_picker: ^4.6.1
   url_launcher: ^6.0.20
   intl: ^0.17.0
+  excel: ^2.0.0-nullsafety-3
 
 dev_dependencies:
   flutter_test:
