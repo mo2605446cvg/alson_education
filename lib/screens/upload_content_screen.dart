@@ -9,8 +9,10 @@ import 'package:alson_education/models/content.dart';
 import 'package:alson_education/constants/strings.dart';
 
 class UploadContentScreen extends StatefulWidget {
+  const UploadContentScreen({super.key});
+
   @override
-  _UploadContentScreenState createState() => _UploadContentScreenState();
+  State<UploadContentScreen> createState() => _UploadContentScreenState();
 }
 
 class _UploadContentScreenState extends State<UploadContentScreen> {
@@ -23,6 +25,7 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
       final bytes = await File(file.path!).readAsBytes();
       final filePath = await StorageService.saveFile(file.name, bytes);
       final content = Content(
+        id: DateTime.now().toString(),
         title: _titleController.text,
         filePath: filePath,
         fileType: file.name.split('.').last,
@@ -30,7 +33,7 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         uploadDate: DateTime.now().toString(),
       );
       await DatabaseService.instance.insertContent(content);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Content uploaded')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Content uploaded')));
     }
   }
 
@@ -39,25 +42,42 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.get('upload_content', appState.language))),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: AppStrings.get('title', appState.language), border: OutlineInputBorder()),
+      appBar: AppBar(
+        title: Text(AppStrings.get('upload_content', appState.language)),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    labelText: AppStrings.get('title', appState.language),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    final result = await FilePicker.platform.pickFiles();
+                    uploadContent(result);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(200, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(AppStrings.get('pick_file', appState.language)),
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final result = await FilePicker.platform.pickFiles();
-                uploadContent(result);
-              },
-              child: Text(AppStrings.get('pick_file', appState.language)),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            ),
-          ],
+          ),
         ),
       ),
     );
