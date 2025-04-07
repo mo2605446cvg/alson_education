@@ -16,7 +16,7 @@ import 'package:alson_education/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService.instance.initHive();
+  await DatabaseService.instance.database; // تهيئة قاعدة البيانات
   runApp(AlsonEducation());
 }
 
@@ -48,6 +48,9 @@ class AlsonEducation extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+},
     );
   }
 }
