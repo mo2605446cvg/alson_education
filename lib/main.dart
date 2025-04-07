@@ -17,10 +17,12 @@ import 'package:alson_education/services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService.instance.database; // تهيئة قاعدة البيانات
-  runApp(AlsonEducation());
+  runApp(const AlsonEducation());
 }
 
 class AlsonEducation extends StatelessWidget {
+  const AlsonEducation({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -33,17 +35,17 @@ class AlsonEducation extends StatelessWidget {
           return MaterialApp(
             title: 'Alson Education',
             theme: themeProvider.themeData,
-            home: SplashScreen(),
+            home: const SplashScreen(),
             routes: {
-              '/home': (context) => HomeScreen(),
-              '/profile': (context) => ProfileScreen(),
-              '/admin/users': (context) => AdminUsersScreen(),
-              '/admin/upload': (context) => UploadContentScreen(),
-              '/content': (context) => ContentScreen(),
-              '/chat': (context) => ChatScreen(),
-              '/results': (context) => ResultsQueryScreen(),
-              '/view_results': (context) => ViewResultsScreen(),
-              '/help': (context) => HelpScreen(),
+              '/home': (context) => const HomeScreen(),
+              '/profile': (context) => const ProfileScreen(),
+              '/admin/users': (context) => const AdminUsersScreen(),
+              '/admin/upload': (context) => const UploadContentScreen(),
+              '/content': (context) => const ContentScreen(),
+              '/chat': (context) => const ChatScreen(),
+              '/results': (context) => const ResultsQueryScreen(),
+              '/view_results': (context) => const ViewResultsScreen(),
+              '/help': (context) => const HelpScreen(),
             },
           );
         },
