@@ -61,18 +61,19 @@ class HomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                Card(
-                  elevation: 8,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      children: [
-                        Text(AppStrings.get('schedule', appState.language)),
-                        Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
-                      ],
+                if (!appState.isAdmin) // عرض الجدول للمستخدمين فقط
+                  Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        children: [
+                          Text(AppStrings.get('schedule', appState.language)),
+                          Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
