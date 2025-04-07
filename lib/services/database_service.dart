@@ -6,55 +6,136 @@ import 'package:alson_education/models/lesson.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
-  static Box<User>? _userBox;
-  static Box<Content>? _contentBox;
-  static Box<Lesson>? _lessonBox;
+  static Database? _database;
 
   DatabaseService._init();
 
-  Future<void> initHive() async {
-    final dir = await getApplicationDocumentsDirectory();
-    Hive.init(dir.path);
-    Hive.registerAdapter(UserAdapter());
-    Hive.registerAdapter(ContentAdapter());
-    Hive.registerAdapter(LessonAdapter());
-
-    _userBox = await Hive.openBox<User>('users');
-    _contentBox = await Hive.openBox<Content>('content');
-    _lessonBox = await Hive.openBox<Lesson>('lessons');
-
-    if (!_userBox!.containsKey('admin123')) {
-      _userBox!.put('admin123', User(code: 'admin123', username: 'Admin', department: 'إدارة', role: 'admin', password: 'adminpass'));
-    }
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('alson_education.db');
+    return _database!;
   }
 
-  Future<List<User>> getUsers() async => _userBox!.values.toList();
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
 
-  Future<User?> getUser(String code) async => _userBox!.get(code);
+    return await openDatabase(path, version: 1, onCreate: _createDB);
+  }
 
-  Future<void> insertUser(User user) async => _userBox!.put(user.code, user);
+  Future<void> _createDB(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE users (
+        code TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        department TEXT NOT NULL,
+        role TEXT NOT NULL,
+        password TEXT NOT NULL
+      )
+    ''');
 
-  Future<void> updateUser(User user) async => _userBox!.put(user.code, user);
+    await db.execute('''
+      CREATE TABLE content (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        uploaded_by TEXT NOT NULL,
+        upload_date TEXT NOT NULL
+      )
+    ''');
 
-  Future<void> deleteUser(String code) async => _userBox!.delete(code);
+    await db.execute('''
+      CREATE TABLE lessons (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT NOT NULL,
+        level TEXT NOT NULL,
+        is_favorite INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
 
-  Future<List<Content>> getContents() async => _contentBox!.values.toList();
+    // إضافة أدمن افتراضي
+    await db.insert('users', User(
+      code: 'admin123',
+      username: 'Admin',
+      department: 'إدارة',
+      role: 'admin',
+      password: 'adminpass',
+    ).toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
 
-  Future<void> insertContent(Content content) async => _contentBox!.put(content.id ?? DateTime.now().toString(), content);
+  Future<List<User>> getUsers() async {
+    final db = await database;
+    final result = await db.query('users');
+    return result.map((map) => User.fromMap(map)).toList();
+  }
 
-  Future<List<Lesson>> getLessons() async => _lessonBox!.values.toList();
+  Future<User?> getUser(String code) async {
+    final db = await database;
+    final result = await db.query('users', where: 'code = ?', whereArgs: [code], limit: 1);
+    return result.isNotEmpty ? User.fromMap(result.first) : null;
+  }
 
-  Future<void> insertLesson(Lesson lesson) async => _lessonBox!.put(lesson.id, lesson);
+  Future<void> insertUser(User user) async {
+    final db = await database;
+    await db.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> updateUser(User user) async {
+    final db = await database;
+    await db.update('users', user.toMap(), where: 'code = ?', whereArgs: [user.code]);
+  }
+
+  Future<void> deleteUser(String code) async {
+    final db = await database;
+    await db.delete('users', where: 'code = ?', whereArgs: [code]);
+  }
+
+  Future<List<Content>> getContents() async {
+    final db = await database;
+    final result = await db.query('content');
+    return result.map((map) => Content.fromMap(map)).toList();
+  }
+
+  Future<void> insertContent(Content content) async {
+    final db = await database;
+    await db.insert('content', content.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Lesson>> getLessons() async {
+    final db = await database;
+    final result = await db.query('lessons');
+    return result.map((map) => Lesson.fromMap(map)).toList();
+  }
+
+  Future<void> insertLesson(Lesson lesson) async {
+    final db = await database;
+    await db.insert('lessons', lesson.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
   Future<void> toggleFavoriteLesson(String id) async {
-    final lesson = _lessonBox!.get(id);
-    if (lesson != null) {
-      lesson.isFavorite = !lesson.isFavorite;
-      await _lessonBox!.put(id, lesson);
+    final db = await database;
+    final lesson = await db.query('lessons', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (lesson.isNotEmpty) {
+      final updatedLesson = Lesson.fromMap(lesson.first);
+      await db.update(
+        'lessons',
+        {'is_favorite': updatedLesson.isFavorite ? 0 : 1},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
   }
 
   Future<List<Lesson>> searchLessons(String query) async {
-    return _lessonBox!.values.where((lesson) => lesson.title.contains(query) || lesson.content.contains(query)).toList();
+    final db = await database;
+    final result = await db.query(
+      'lessons',
+      where: 'title LIKE ? OR content LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+    );
+    return result.map((map) => Lesson.fromMap(map)).toList();
   }
 }
