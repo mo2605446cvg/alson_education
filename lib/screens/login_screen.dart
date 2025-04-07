@@ -4,6 +4,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
 import 'package:alson_education/constants/strings.dart';
+import 'package:alson_education/models/user.dart'; // إضافة استيراد User
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
