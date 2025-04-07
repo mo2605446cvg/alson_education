@@ -6,6 +6,8 @@ import 'package:alson_education/constants/colors.dart';
 import 'package:alson_education/constants/strings.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
@@ -14,6 +16,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.get('home', appState.language)),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
@@ -38,34 +41,41 @@ class HomeScreen extends StatelessWidget {
               PopupMenuItem(value: 'help', child: Text(AppStrings.get('help', appState.language))),
               PopupMenuItem(value: 'language', child: Text(AppStrings.get('toggle_language', appState.language))),
               PopupMenuItem(value: 'logout', child: Text(AppStrings.get('logout', appState.language))),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/users', child: Text('إدارة المستخدمين')),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/upload', child: Text('رفع المحتوى')),
+              if (appState.isAdmin) PopupMenuItem(value: 'admin/users', child: const Text('إدارة المستخدمين')),
+              if (appState.isAdmin) PopupMenuItem(value: 'admin/upload', child: const Text('رفع المحتوى')),
             ],
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text(
-              '${AppStrings.get('hello', appState.language)} ${appState.currentUserEmail}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 20),
-            Card(
-              elevation: 8,
-              child: Padding(
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    Text(AppStrings.get('schedule', appState.language)),
-                    Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
-                  ],
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '${AppStrings.get('hello', appState.language)} ${appState.currentUserEmail}',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                const SizedBox(height: 20),
+                Card(
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        Text(AppStrings.get('schedule', appState.language)),
+                        Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
