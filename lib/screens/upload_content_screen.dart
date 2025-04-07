@@ -28,12 +28,14 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         id: DateTime.now().toString(),
         title: _titleController.text,
         filePath: filePath,
-        fileType: file.name.split('.').last,
+        fileType: file.name.split('.').last.toLowerCase(),
         uploadedBy: appState.currentUserCode!,
         uploadDate: DateTime.now().toString(),
       );
       await DatabaseService.instance.insertContent(content);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Content uploaded')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a title and select a file')));
     }
   }
 
@@ -64,7 +66,10 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    final result = await FilePicker.platform.pickFiles();
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['jpg', 'png', 'pdf', 'txt'],
+                    );
                     uploadContent(result);
                   },
                   style: ElevatedButton.styleFrom(
