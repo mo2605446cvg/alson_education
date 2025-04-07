@@ -8,9 +8,9 @@ import 'package:alson_education/screens/upload_content_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_query_screen.dart';
-import 'package:alson_education/screens/view_result_screen.dart';
+import 'package:alson_education/screens/view_results_screen.dart'; // تأكد من أن الاسم هنا صحيح
 import 'package:alson_education/screens/help_screen.dart';
-import 'package:alson_education/providers/app_state_provider.dart';
+import 'providers/app_state_provider.dart';
 import 'package:alson_education/providers/theme_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 
@@ -44,7 +44,7 @@ class AlsonEducation extends StatelessWidget {
               '/content': (context) => const ContentScreen(),
               '/chat': (context) => const ChatScreen(),
               '/results': (context) => const ResultsQueryScreen(),
-              '/view_results': (context) => const ViewResultsScreen(),
+              '/view_results': (context) => ViewResultsScreen(), // إزالة const هنا لتتناسب مع التعديل
               '/help': (context) => const HelpScreen(),
             },
           );
