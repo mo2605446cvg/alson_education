@@ -21,12 +21,20 @@ class _LoginScreenState extends State<LoginScreen> {
     appState.setLoading(true);
 
     final db = DatabaseService.instance;
-    final user = await db.getUser(_usernameController.text.trim());
-    if (user != null && user.password == _passwordController.text.trim()) {
+    // استرجاع المستخدم بناءً على اسم المستخدم بدلاً من الكود
+    final users = await db.getUsers();
+    final user = users.firstWhere(
+      (u) => u.username == _usernameController.text.trim(),
+      orElse: () => User(code: '', username: '', department: '', role: '', password: ''),
+    );
+
+    if (user.username.isNotEmpty && user.password == _passwordController.text.trim()) {
       appState.login(user.username, user.code, user.role, user.department);
       Navigator.pushReplacementNamed(context, '/home');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid credentials')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid username or password')));
+      print('User not found or password mismatch: ${user.username}, ${user.password}');
     }
 
     appState.setLoading(false);
