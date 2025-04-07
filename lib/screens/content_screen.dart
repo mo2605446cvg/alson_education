@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:alson_education/services/database_service.dart';
-import 'package:alson_education/models/lesson.dart';
+import 'package:alson_education/models/content.dart';
 import 'package:alson_education/constants/strings.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 
@@ -13,19 +15,46 @@ class ContentScreen extends StatefulWidget {
 }
 
 class _ContentScreenState extends State<ContentScreen> {
-  final _searchController = TextEditingController();
-  List<Lesson> lessons = [];
+  List<Content> contents = [];
 
   @override
   void initState() {
     super.initState();
-    loadLessons();
+    loadContents();
   }
 
-  Future<void> loadLessons([String query = '']) async {
+  Future<void> loadContents() async {
     final db = DatabaseService.instance;
-    lessons = query.isEmpty ? await db.getLessons() : await db.searchLessons(query);
+    contents = await db.getContents();
     setState(() {});
+  }
+
+  Future<void> viewContent(Content content) async {
+    final filePath = content.filePath;
+    if (await File(filePath).exists()) {
+      if (content.fileType == 'jpg' || content.fileType == 'png') {
+        // عرض الصورة داخل التطبيق
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(title: Text(content.title)),
+              body: Center(child: Image.file(File(filePath))),
+            ),
+          ),
+        );
+      } else if (content.fileType == 'pdf' || content.fileType == 'txt') {
+        // فتح PDF أو نص باستخدام url_launcher
+        final uri = Uri.file(filePath);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot open file')));
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File not found')));
+    }
   }
 
   @override
@@ -45,33 +74,18 @@ class _ContentScreenState extends State<ContentScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.get('search', appState.language),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                  ),
-                  onChanged: (value) => loadLessons(value),
-                ),
-                const SizedBox(height: 20),
-                lessons.isEmpty
-                    ? const Text('No lessons found', textAlign: TextAlign.center)
+                contents.isEmpty
+                    ? const Text('No content available', textAlign: TextAlign.center)
                     : SizedBox(
                         height: MediaQuery.of(context).size.height * 0.6,
                         child: ListView.builder(
-                          itemCount: lessons.length,
+                          itemCount: contents.length,
                           itemBuilder: (context, index) {
-                            final lesson = lessons[index];
+                            final content = contents[index];
                             return ListTile(
-                              title: Text(lesson.title, textAlign: TextAlign.center),
-                              subtitle: Text(lesson.category, textAlign: TextAlign.center),
-                              trailing: IconButton(
-                                icon: Icon(lesson.isFavorite ? Icons.favorite : Icons.favorite_border),
-                                onPressed: () async {
-                                  await DatabaseService.instance.toggleFavoriteLesson(lesson.id);
-                                  loadLessons(_searchController.text);
-                                },
-                              ),
+                              title: Text(content.title, textAlign: TextAlign.center),
+                              subtitle: Text('Type: ${content.fileType}', textAlign: TextAlign.center),
+                              onTap: () => viewContent(content),
                             );
                           },
                         ),
