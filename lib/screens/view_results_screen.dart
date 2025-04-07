@@ -4,7 +4,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/constants/strings.dart';
 
 class ViewResultsScreen extends StatelessWidget {
-  const ViewResultsScreen({super.key});
+  ViewResultsScreen({super.key}); // إزالة const هنا
 
   final Map<String, String> results = {
     'math': '85/100',
