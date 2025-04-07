@@ -1,4 +1,5 @@
-import 'package:hive/hive.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/models/content.dart';
@@ -57,13 +58,17 @@ class DatabaseService {
     ''');
 
     // إضافة أدمن افتراضي
-    await db.insert('users', User(
-      code: 'admin123',
-      username: 'Admin',
-      department: 'إدارة',
-      role: 'admin',
-      password: 'adminpass',
-    ).toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert(
+      'users',
+      User(
+        code: 'admin123',
+        username: 'Admin',
+        department: 'إدارة',
+        role: 'admin',
+        password: 'adminpass',
+      ).toMap(),
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
 
   Future<List<User>> getUsers() async {
