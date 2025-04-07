@@ -21,12 +21,16 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
   }
 
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         code TEXT PRIMARY KEY,
         username TEXT NOT NULL,
         department TEXT NOT NULL,
@@ -36,7 +40,7 @@ class DatabaseService {
     ''');
 
     await db.execute('''
-      CREATE TABLE content (
+      CREATE TABLE IF NOT EXISTS content (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         file_path TEXT NOT NULL,
@@ -47,7 +51,7 @@ class DatabaseService {
     ''');
 
     await db.execute('''
-      CREATE TABLE lessons (
+      CREATE TABLE IF NOT EXISTS lessons (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
@@ -79,23 +83,41 @@ class DatabaseService {
 
   Future<User?> getUser(String code) async {
     final db = await database;
-    final result = await db.query('users', where: 'code = ?', whereArgs: [code], limit: 1);
+    final result = await db.query(
+      'users',
+      where: 'code = ?',
+      whereArgs: [code],
+      limit: 1,
+    );
     return result.isNotEmpty ? User.fromMap(result.first) : null;
   }
 
   Future<void> insertUser(User user) async {
     final db = await database;
-    await db.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'users',
+      user.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateUser(User user) async {
     final db = await database;
-    await db.update('users', user.toMap(), where: 'code = ?', whereArgs: [user.code]);
+    await db.update(
+      'users',
+      user.toMap(),
+      where: 'code = ?',
+      whereArgs: [user.code],
+    );
   }
 
   Future<void> deleteUser(String code) async {
     final db = await database;
-    await db.delete('users', where: 'code = ?', whereArgs: [code]);
+    await db.delete(
+      'users',
+      where: 'code = ?',
+      whereArgs: [code],
+    );
   }
 
   Future<List<Content>> getContents() async {
@@ -106,7 +128,11 @@ class DatabaseService {
 
   Future<void> insertContent(Content content) async {
     final db = await database;
-    await db.insert('content', content.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'content',
+      content.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Lesson>> getLessons() async {
@@ -117,17 +143,26 @@ class DatabaseService {
 
   Future<void> insertLesson(Lesson lesson) async {
     final db = await database;
-    await db.insert('lessons', lesson.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'lessons',
+      lesson.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> toggleFavoriteLesson(String id) async {
     final db = await database;
-    final lesson = await db.query('lessons', where: 'id = ?', whereArgs: [id], limit: 1);
-    if (lesson.isNotEmpty) {
-      final updatedLesson = Lesson.fromMap(lesson.first);
+    final lessonResult = await db.query(
+      'lessons',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (lessonResult.isNotEmpty) {
+      final lesson = Lesson.fromMap(lessonResult.first);
       await db.update(
         'lessons',
-        {'is_favorite': updatedLesson.isFavorite ? 0 : 1},
+        {'is_favorite': lesson.isFavorite ? 0 : 1},
         where: 'id = ?',
         whereArgs: [id],
       );
