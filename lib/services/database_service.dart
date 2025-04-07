@@ -14,6 +14,7 @@ class DatabaseService {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('alson_education.db');
+    await _ensureAdminUser(); // التأكد من وجود الأدمن
     return _database!;
   }
 
@@ -60,19 +61,31 @@ class DatabaseService {
         is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
+  }
 
-    // إضافة أدمن افتراضي
-    await db.insert(
+  Future<void> _ensureAdminUser() async {
+    final db = await database;
+    final adminExists = await db.query(
       'users',
-      User(
-        code: 'admin123',
-        username: 'Admin',
-        department: 'إدارة',
-        role: 'admin',
-        password: 'adminpass',
-      ).toMap(),
-      conflictAlgorithm: ConflictAlgorithm.ignore,
+      where: 'code = ?',
+      whereArgs: ['admin123'],
     );
+    if (adminExists.isEmpty) {
+      await db.insert(
+        'users',
+        User(
+          code: 'admin123',
+          username: 'Admin',
+          department: 'إدارة',
+          role: 'admin',
+          password: 'adminpass',
+        ).toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      print('Admin user created');
+    } else {
+      print('Admin user already exists');
+    }
   }
 
   Future<List<User>> getUsers() async {
