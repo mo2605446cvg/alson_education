@@ -28,14 +28,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     try {
       final db = DatabaseService.instance;
       users = await db.getUsers();
+      print('Loaded ${users.length} users from database');
       setState(() {});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
+      print('Error loading users: $e');
     }
   }
 
   Future<void> uploadExcelFile() async {
     try {
+      print('Starting Excel file upload...');
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
@@ -43,12 +46,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
       if (result == null || result.files.single.path == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No file selected')));
+        print('No file selected');
         return;
       }
 
       final filePath = result.files.single.path!;
+      print('File selected: $filePath');
+
       final bytes = await File(filePath).readAsBytes();
+      print('File bytes read successfully, length: ${bytes.length}');
+
       final excel = Excel.decodeBytes(bytes);
+      print('Excel file decoded, sheets: ${excel.sheets.keys}');
 
       final db = DatabaseService.instance;
       int totalUsersAdded = 0;
@@ -57,41 +66,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         final sheetData = excel.sheets[sheet];
         if (sheetData == null || sheetData.rows.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sheet is empty')));
+          print('Sheet "$sheet" is empty');
           continue;
         }
 
         final department = sheet; // اسم الورقة هو القسم
-        final headers = sheetData.rows[0]; // الصف الأول يحتوي على العناوين
-        int nameIndex = -1;
-        int codeIndex = -1;
+        print('Processing sheet: $department');
 
-        // البحث عن موقع العناوين في الصف الأول
-        for (int i = 0; i < headers.length; i++) {
-          final headerValue = headers[i]?.value?.toString().trim();
-          if (headerValue == null) continue;
-
-          // التعامل مع النصوص العربية والإنجليزية
-          final lowerHeader = headerValue.toLowerCase();
-          if (lowerHeader == 'الاسم' || lowerHeader == 'name') {
-            nameIndex = i;
-          } else if (lowerHeader == 'كود الطالب' || lowerHeader == 'student code') {
-            codeIndex = i;
+        // قراءة البيانات من جميع الصفوف (بدون افتراض عناوين في الصف الأول)
+        for (var row in sheetData.rows) {
+          if (row.isEmpty || row.length < 2 || row[0] == null || row[1] == null) {
+            print('Skipping empty or invalid row: $row');
+            continue; // تجاهل الصفوف الفارغة أو التي تحتوي على أقل من عمودين
           }
-        }
 
-        // التحقق من وجود العناوين المطلوبة
-        if (nameIndex == -1 || codeIndex == -1) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel file must contain "الاسم" and "كود الطالب" headers')));
-          return;
-        }
-
-        // قراءة البيانات من الصف الثاني فصاعدًا
-        for (var row in sheetData.rows.skip(1)) {
-          if (row.isEmpty || row[nameIndex] == null || row[codeIndex] == null) continue; // تجاهل الصفوف الفارغة
-
-          final username = row[nameIndex]?.value?.toString().trim() ?? '';
-          final password = row[codeIndex]?.value?.toString().trim() ?? '';
+          final username = row[0]?.value?.toString().trim() ?? '';
+          final password = row[1]?.value?.toString().trim() ?? '';
           final code = password; // استخدام كود الطالب كـ code
+
+          print('Processing row - Username: $username, Password/Code: $password');
 
           if (username.isNotEmpty && password.isNotEmpty) {
             final user = User(
@@ -103,6 +96,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             );
             await db.insertUser(user);
             totalUsersAdded++;
+            print('User added: ${user.username}, Code: ${user.code}');
+          } else {
+            print('Invalid data in row: Username or Password is empty');
           }
         }
       }
@@ -110,8 +106,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       if (totalUsersAdded > 0) {
         await loadUsers();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$totalUsersAdded users uploaded successfully')));
+        print('Successfully uploaded $totalUsersAdded users');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid users found in the Excel file')));
+        print('No valid users found');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error uploading Excel file: $e')));
@@ -258,4 +256,3 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       ),
     );
   }
-}
