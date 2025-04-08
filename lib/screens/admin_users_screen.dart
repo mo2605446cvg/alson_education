@@ -78,28 +78,29 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
         // التعامل مع الصف الأول كصف العناوين مباشرة
         final headerRow = sheetData.rows[0];
-        print('Header Row 0: ${headerRow.map((cell) => cell?.value?.toString() ?? 'null').join(', ')}');
+        print('Raw Header Row 0: ${headerRow.map((cell) => cell?.value.toString() ?? 'null').join(', ')}');
 
         for (int i = 0; i < headerRow.length; i++) {
-          final cellValue = headerRow[i]?.value?.toString() ?? '';
-          final cleanedValue = cellValue
+          final rawValue = headerRow[i]?.value?.toString() ?? '';
+          final cleanedValue = rawValue
               .trim() // إزالة المسافات من البداية والنهاية
               .replaceAll(RegExp(r'\s+'), ' ') // استبدال المسافات المتعددة بمسافة واحدة
-              .replaceAll(RegExp(r'[-]+'), '') // إزالة الشرطات الطويلة
-              .replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), ''); // إزالة الرموز غير الأبجدية
+              .replaceAll(RegExp(r'[-_\u2000-\u200B]+'), '') // إزالة الشرطات والمسافات غير المرئية
+              .replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), '') // إزالة الرموز غير الأبجدية
+              .toLowerCase(); // تحويل إلى أحرف صغيرة لتسهيل التطابق
 
-          print('Cell [0][$i] - Cleaned Value: $cleanedValue');
-          if (cleanedValue.contains('اسم')) {
+          print('Cell [0][$i] - Raw Value: $rawValue, Cleaned Value: $cleanedValue');
+          if (cleanedValue.contains('الاســـــــم')) {
             nameIndex = i;
-          } else if (cleanedValue.contains('كود') || cleanedValue.contains('code')) {
+          } else if (cleanedValue.contains('كود') || cleanedValue.contains('الطالب') || cleanedValue.contains('code')) {
             codeIndex = i;
           }
         }
 
         // التحقق من العثور على العناوين
         if (nameIndex == -1 || codeIndex == -1) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not find "الاسم" and "كود الطالب" in the header row')));
-          print('Headers not found in row 0');
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not find "الاســـــــم" and "كود الطالب" in the header row')));
+          print('Headers not found in row 0. nameIndex=$nameIndex, codeIndex=$codeIndex');
           return;
         }
 
