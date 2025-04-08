@@ -75,50 +75,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
         int nameIndex = -1;
         int codeIndex = -1;
-        int headerRowIndex = -1;
 
-        // البحث عن الصف الذي يحتوي على العناوين "الاسم" و"كود الطالب" في الـ 5 صفوف الأولى
-        for (int rowIndex = 0; rowIndex < 5 && rowIndex < sheetData.rows.length; rowIndex++) {
-          final row = sheetData.rows[rowIndex];
-          nameIndex = -1;
-          codeIndex = -1;
+        // التعامل مع الصف الأول كصف العناوين مباشرة
+        final headerRow = sheetData.rows[0];
+        print('Header Row 0: ${headerRow.map((cell) => cell?.value?.toString() ?? 'null').join(', ')}');
 
-          print('Row $rowIndex: ${row.map((cell) => cell?.value?.toString() ?? 'null').join(', ')}');
+        for (int i = 0; i < headerRow.length; i++) {
+          final cellValue = headerRow[i]?.value?.toString() ?? '';
+          final cleanedValue = cellValue
+              .trim() // إزالة المسافات من البداية والنهاية
+              .replaceAll(RegExp(r'\s+'), ' ') // استبدال المسافات المتعددة بمسافة واحدة
+              .replaceAll(RegExp(r'[-]+'), '') // إزالة الشرطات الطويلة
+              .replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), ''); // إزالة الرموز غير الأبجدية
 
-          for (int i = 0; i < row.length; i++) {
-            final cellValue = row[i]?.value?.toString() ?? '';
-            final cleanedValue = cellValue
-                .trim() // إزالة المسافات من البداية والنهاية
-                .replaceAll(RegExp(r'\s+'), ' ') // استبدال المسافات المتعددة بمسافة واحدة
-                .replaceAll(RegExp(r'[^\w\s\u0621-\u064A]'), ''); // إزالة الرموز غير الأبجدية العربية أو الإنجليزية
-
-            print('Cell [$rowIndex][$i] - Cleaned Value: $cleanedValue');
-            if (cleanedValue.isEmpty) continue;
-
-            if (cleanedValue == 'الاسم' || cleanedValue.toLowerCase() == 'name') {
-              nameIndex = i;
-            } else if (cleanedValue == 'كودالطالب' || cleanedValue.toLowerCase() == 'studentcode' || cleanedValue == 'كود الطالب') {
-              codeIndex = i;
-            }
-          }
-
-          // إذا تم العثور على العناوين في هذا الصف، قم بتخزين الموقع وتوقف عن البحث
-          if (nameIndex != -1 && codeIndex != -1) {
-            headerRowIndex = rowIndex;
-            print('Headers found at row $headerRowIndex: nameIndex=$nameIndex, codeIndex=$codeIndex');
-            break;
+          print('Cell [0][$i] - Cleaned Value: $cleanedValue');
+          if (cleanedValue.contains('اسم')) {
+            nameIndex = i;
+          } else if (cleanedValue.contains('كود') || cleanedValue.contains('code')) {
+            codeIndex = i;
           }
         }
 
         // التحقق من العثور على العناوين
-        if (headerRowIndex == -1 || nameIndex == -1 || codeIndex == -1) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not find "الاسم" and "كود الطالب" in any row')));
-          print('Headers not found in any row after checking first 5 rows');
+        if (nameIndex == -1 || codeIndex == -1) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not find "الاسم" and "كود الطالب" in the header row')));
+          print('Headers not found in row 0');
           return;
         }
 
+        print('Headers found: nameIndex=$nameIndex, codeIndex=$codeIndex');
+
         // قراءة البيانات من الصف التالي لصف العناوين فصاعدًا
-        for (int rowIndex = headerRowIndex + 1; rowIndex < sheetData.rows.length; rowIndex++) {
+        for (int rowIndex = 1; rowIndex < sheetData.rows.length; rowIndex++) {
           final row = sheetData.rows[rowIndex];
           if (row.isEmpty || row.length <= nameIndex || row.length <= codeIndex || row[nameIndex] == null || row[codeIndex] == null) {
             print('Skipping empty or invalid row at index $rowIndex: $row');
