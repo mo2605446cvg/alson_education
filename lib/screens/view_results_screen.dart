@@ -4,17 +4,18 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/constants/strings.dart';
 
 class ViewResultsScreen extends StatelessWidget {
-  ViewResultsScreen({super.key}); // إزالة const هنا
-
-  final Map<String, String> results = {
-    'math': '85/100',
-    'science': '92/100',
-    'arabic': '88/100',
-  };
+  const ViewResultsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+
+    // افتراضيًا، يمكن استرجاع النتائج من قاعدة البيانات أو API
+    final Map<String, String> results = {
+      'math': '85/100',
+      'science': '92/100',
+      'arabic': '88/100',
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -34,7 +35,10 @@ class ViewResultsScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                ...results.entries.map((e) => Text('${e.key}: ${e.value}', textAlign: TextAlign.center)).toList(),
+                ...results.entries.map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text('${e.key}: ${e.value}', textAlign: TextAlign.center),
+                    )),
               ],
             ),
           ),
