@@ -15,42 +15,30 @@ class ContentScreen extends StatefulWidget {
 }
 
 class _ContentScreenState extends State<ContentScreen> {
-  List<Content> contents = [];
-
-  @override
-  void initState() {
-    super.initState();
-    loadContents();
-  }
-
-  Future<void> loadContents() async {
-    final db = DatabaseService.instance;
-    contents = await db.getContents();
-    setState(() {});
-  }
-
   Future<void> viewContent(Content content) async {
     final filePath = content.filePath;
     if (await File(filePath).exists()) {
-      if (content.fileType == 'jpg' || content.fileType == 'png') {
-        // عرض الصورة داخل التطبيق
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(title: Text(content.title)),
-              body: Center(child: Image.file(File(filePath))),
+      try {
+        if (content.fileType == 'jpg' || content.fileType == 'png') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: Text(content.title)),
+                body: Center(child: Image.file(File(filePath))),
+              ),
             ),
-          ),
-        );
-      } else if (content.fileType == 'pdf' || content.fileType == 'txt') {
-        // فتح PDF أو نص باستخدام url_launcher
-        final uri = Uri.file(filePath);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot open file')));
+          );
+        } else if (content.fileType == 'pdf' || content.fileType == 'txt') {
+          final uri = Uri.file(filePath);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot open file')));
+          }
         }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening file: $e')));
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File not found')));
@@ -66,34 +54,31 @@ class _ContentScreenState extends State<ContentScreen> {
         title: Text(AppStrings.get('content', appState.language)),
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                contents.isEmpty
-                    ? const Text('No content available', textAlign: TextAlign.center)
-                    : SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: ListView.builder(
-                          itemCount: contents.length,
-                          itemBuilder: (context, index) {
-                            final content = contents[index];
-                            return ListTile(
-                              title: Text(content.title, textAlign: TextAlign.center),
-                              subtitle: Text('Type: ${content.fileType}', textAlign: TextAlign.center),
-                              onTap: () => viewContent(content),
-                            );
-                          },
-                        ),
-                      ),
-              ],
-            ),
-          ),
-        ),
+      body: FutureBuilder<List<Content>>(
+        future: DatabaseService.instance.getContents(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error loading content: ${snapshot.error}'));
+          }
+          final contents = snapshot.data ?? [];
+          return contents.isEmpty
+              ? const Center(child: Text('No content available'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(20.0),
+                  itemCount: contents.length,
+                  itemBuilder: (context, index) {
+                    final content = contents[index];
+                    return ListTile(
+                      title: Text(content.title, textAlign: TextAlign.center),
+                      subtitle: Text('Type: ${content.fileType}', textAlign: TextAlign.center),
+                      onTap: () => viewContent(content),
+                    );
+                  },
+                );
+        },
       ),
     );
   }
