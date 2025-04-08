@@ -44,16 +44,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final db = DatabaseService.instance;
       for (var sheet in excel.sheets.keys) {
         final sheetData = excel.sheets[sheet];
-        if (sheetData == null) continue;
+        if (sheetData == null || sheetData.rows.isEmpty) continue;
 
-        final department = sheet; // عنوان الورقة هو القسم
+        final department = sheet; // اسم الورقة هو القسم
         final headers = sheetData.rows[0]; // الصف الأول يحتوي على العناوين
         int nameIndex = -1;
         int codeIndex = -1;
 
         // البحث عن موقع العناوين في الصف الأول
         for (int i = 0; i < headers.length; i++) {
-          final headerValue = headers[i]?.value?.toString().toLowerCase();
+          final headerValue = headers[i]?.value?.toString().toLowerCase().trim();
           if (headerValue == 'الاسم' || headerValue == 'name') {
             nameIndex = i;
           } else if (headerValue == 'كود الطالب' || headerValue == 'student code') {
@@ -61,6 +61,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           }
         }
 
+        // التحقق من وجود العناوين المطلوبة
         if (nameIndex == -1 || codeIndex == -1) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel file must contain "الاسم" and "كود الطالب" headers')));
           return;
