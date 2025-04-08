@@ -4,7 +4,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
 import 'package:alson_education/constants/strings.dart';
-import 'package:alson_education/models/user.dart'; // إضافة استيراد User
+import 'package:alson_education/models/user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,24 +21,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final appState = Provider.of<AppState>(context, listen: false);
     appState.setLoading(true);
 
-    final db = DatabaseService.instance;
-    // استرجاع المستخدم بناءً على اسم المستخدم بدلاً من الكود
-    final users = await db.getUsers();
-    final user = users.firstWhere(
-      (u) => u.username == _usernameController.text.trim(),
-      orElse: () => User(code: '', username: '', department: '', role: '', password: ''),
-    );
+    try {
+      final db = DatabaseService.instance;
+      final user = await db.getUser(_usernameController.text.trim());
 
-    if (user.username.isNotEmpty && user.password == _passwordController.text.trim()) {
-      appState.login(user.username, user.code, user.role, user.department);
-      Navigator.pushReplacementNamed(context, '/home');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid username or password')));
-      print('User not found or password mismatch: ${user.username}, ${user.password}');
+      if (user != null && user.password == _passwordController.text.trim()) {
+        appState.login(user.username, user.code, user.role, user.department);
+        Navigator.pushReplacementNamed(context, '/home');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
+      } else {
+        appState.setError('Invalid username or password');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid username or password')));
+      }
+    } catch (e) {
+      appState.setError('Login failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+    } finally {
+      appState.setLoading(false);
     }
-
-    appState.setLoading(false);
   }
 
   @override
@@ -66,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: AppStrings.get('username', appState.language),
                     prefixIcon: const Icon(Icons.person),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    errorText: appState.hasError ? appState.errorMessage : null,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -75,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: AppStrings.get('password', appState.language),
                     prefixIcon: const Icon(Icons.lock),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                    errorText: appState.hasError ? appState.errorMessage : null,
                   ),
                   obscureText: true,
                 ),
@@ -87,9 +89,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     minimumSize: const Size(200, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(AppStrings.get('login', appState.language)),
+                  child: appState.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(AppStrings.get('login', appState.language)),
                 ),
-                if (appState.isLoading) const CircularProgressIndicator(),
               ],
             ),
           ),
