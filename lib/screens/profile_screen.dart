@@ -9,20 +9,22 @@ import 'package:alson_education/models/user.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  Future<User?> getUserData(BuildContext context) async {
-    final appState = Provider.of<AppState>(context, listen: false);
-    return await DatabaseService.instance.getUser(appState.currentUserCode ?? '');
-  }
-
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
 
     return FutureBuilder<User?>(
-      future: getUserData(context),
+      future: DatabaseService.instance.getUser(appState.currentUserCode ?? ''),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const Scaffold(body: Center(child: Text('User not found')));
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          return Scaffold(
+            body: Center(
+              child: Text('User not found or error: ${snapshot.error}'),
+            ),
+          );
         }
 
         final user = snapshot.data!;
