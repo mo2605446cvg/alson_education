@@ -14,6 +14,13 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final List<String> messages = [];
 
+  void _addMessage(String message) {
+    setState(() {
+      messages.add(message);
+    });
+    _messageController.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
@@ -23,55 +30,46 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(AppStrings.get('chat', appState.language)),
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
+      body: Column(
+        children: [
+          Expanded(
+            child: messages.isEmpty
+                ? Center(child: Text(AppStrings.get('no_messages', appState.language) ?? 'No messages yet'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(20.0),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) => ListTile(
+                      title: Text(messages[index], textAlign: TextAlign.center),
+                    ),
+                  ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Column(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                messages.isEmpty
-                    ? const Text('No messages yet', textAlign: TextAlign.center)
-                    : SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: ListView.builder(
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) => ListTile(
-                            title: Text(messages[index], textAlign: TextAlign.center),
-                          ),
-                        ),
-                      ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          labelText: AppStrings.get('message', appState.language),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                        ),
-                      ),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.get('message', appState.language),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                      errorText: _messageController.text.isEmpty ? 'Message cannot be empty' : null,
                     ),
-                    const SizedBox(width: 10),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: () {
-                        if (_messageController.text.isNotEmpty) {
-                          setState(() => messages.add(_messageController.text));
-                          _messageController.clear();
-                        }
-                      },
-                    ),
-                  ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _messageController.text.isEmpty
+                      ? null
+                      : () => _addMessage(_messageController.text),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
