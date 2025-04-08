@@ -17,7 +17,8 @@ class ThemeProvider with ChangeNotifier {
     brightness: Brightness.light,
     scaffoldBackgroundColor: Colors.grey[200],
     cardColor: Colors.white,
-    textTheme: TextTheme(bodyLarge: TextStyle(color: Colors.black87)),
+    textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.black87)),
+    appBarTheme: const AppBarTheme(backgroundColor: Colors.blue, foregroundColor: Colors.white),
   );
 
   static final darkTheme = ThemeData(
@@ -25,6 +26,7 @@ class ThemeProvider with ChangeNotifier {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: Colors.grey[900],
     cardColor: Colors.grey[800],
-    textTheme: TextTheme(bodyLarge: TextStyle(color: Colors.white70)),
+    textTheme: const TextTheme(bodyLarge: TextStyle(color: Colors.white70)),
+    appBarTheme: const AppBarTheme(backgroundColor: Colors.blue, foregroundColor: Colors.white),
   );
 }
