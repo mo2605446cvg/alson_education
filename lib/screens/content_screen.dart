@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/models/content.dart';
-import 'package:alson_education/constants/strings.dart';
+import 'package:alson_education/constants/app_strings.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 
 class ContentScreen extends StatefulWidget {
