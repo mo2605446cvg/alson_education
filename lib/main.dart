@@ -8,16 +8,20 @@ import 'package:alson_education/screens/upload_content_screen.dart';
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/results_query_screen.dart';
-import 'package:alson_education/screens/view_results_screen.dart'; // تأكد من أن الاسم هنا صحيح
+import 'package:alson_education/screens/view_results_screen.dart';
 import 'package:alson_education/screens/help_screen.dart';
-import 'providers/app_state_provider.dart';
+import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/providers/theme_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService.instance.database; // تهيئة قاعدة البيانات
-  runApp(const AlsonEducation());
+  try {
+    await DatabaseService.instance.database; // تهيئة قاعدة البيانات
+    runApp(const AlsonEducation());
+  } catch (e) {
+    runApp(ErrorScreen(errorMessage: 'Failed to initialize database: $e'));
+  }
 }
 
 class AlsonEducation extends StatelessWidget {
@@ -44,11 +48,28 @@ class AlsonEducation extends StatelessWidget {
               '/content': (context) => const ContentScreen(),
               '/chat': (context) => const ChatScreen(),
               '/results': (context) => const ResultsQueryScreen(),
-              '/view_results': (context) => ViewResultsScreen(), // إزالة const هنا لتتناسب مع التعديل
+              '/view_results': (context) => ViewResultsScreen(), // لا يحتاج إلى const
               '/help': (context) => const HelpScreen(),
+              '/error': (context) => const ErrorScreen(errorMessage: 'An error occurred'),
             },
+            initialRoute: '/splash',
           );
         },
+      ),
+    );
+  }
+}
+
+class ErrorScreen extends StatelessWidget {
+  final String errorMessage;
+
+  const ErrorScreen({super.key, required this.errorMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text('Error: $errorMessage', style: TextStyle(color: Colors.red)),
       ),
     );
   }
