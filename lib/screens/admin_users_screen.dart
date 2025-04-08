@@ -25,26 +25,40 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> loadUsers() async {
-    final db = DatabaseService.instance;
-    users = await db.getUsers();
-    setState(() {});
+    try {
+      final db = DatabaseService.instance;
+      users = await db.getUsers();
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
+    }
   }
 
   Future<void> uploadExcelFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['xlsx'],
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
 
-    if (result != null && result.files.single.path != null) {
+      if (result == null || result.files.single.path == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No file selected')));
+        return;
+      }
+
       final filePath = result.files.single.path!;
-      final bytes = File(filePath).readAsBytesSync();
+      final bytes = await File(filePath).readAsBytes();
       final excel = Excel.decodeBytes(bytes);
 
       final db = DatabaseService.instance;
+      int totalUsersAdded = 0;
+
       for (var sheet in excel.sheets.keys) {
         final sheetData = excel.sheets[sheet];
-        if (sheetData == null || sheetData.rows.isEmpty) continue;
+        if (sheetData == null || sheetData.rows.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sheet is empty')));
+          continue;
+        }
 
         final department = sheet; // اسم الورقة هو القسم
         final headers = sheetData.rows[0]; // الصف الأول يحتوي على العناوين
@@ -53,10 +67,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
         // البحث عن موقع العناوين في الصف الأول
         for (int i = 0; i < headers.length; i++) {
-          final headerValue = headers[i]?.value?.toString().toLowerCase().trim();
-          if (headerValue == 'الاسم' || headerValue == 'name') {
+          final headerValue = headers[i]?.value?.toString().trim();
+          if (headerValue == null) continue;
+
+          // التعامل مع النصوص العربية والإنجليزية
+          final lowerHeader = headerValue.toLowerCase();
+          if (lowerHeader == 'الاسم' || lowerHeader == 'name') {
             nameIndex = i;
-          } else if (headerValue == 'كود الطالب' || headerValue == 'student code') {
+          } else if (lowerHeader == 'كود الطالب' || lowerHeader == 'student code') {
             codeIndex = i;
           }
         }
@@ -69,28 +87,35 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
         // قراءة البيانات من الصف الثاني فصاعدًا
         for (var row in sheetData.rows.skip(1)) {
-          if (row.length > nameIndex && row.length > codeIndex) {
-            final username = row[nameIndex]?.value?.toString() ?? '';
-            final password = row[codeIndex]?.value?.toString() ?? '';
-            final code = password; // استخدام كود الطالب كـ code
+          if (row.isEmpty || row[nameIndex] == null || row[codeIndex] == null) continue; // تجاهل الصفوف الفارغة
 
-            if (username.isNotEmpty && password.isNotEmpty) {
-              final user = User(
-                code: code,
-                username: username,
-                department: department,
-                role: 'user',
-                password: password,
-              );
-              await db.insertUser(user);
-            }
+          final username = row[nameIndex]?.value?.toString().trim() ?? '';
+          final password = row[codeIndex]?.value?.toString().trim() ?? '';
+          final code = password; // استخدام كود الطالب كـ code
+
+          if (username.isNotEmpty && password.isNotEmpty) {
+            final user = User(
+              code: code,
+              username: username,
+              department: department,
+              role: 'user',
+              password: password,
+            );
+            await db.insertUser(user);
+            totalUsersAdded++;
           }
         }
       }
-      await loadUsers();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Users uploaded successfully')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to upload Excel file')));
+
+      if (totalUsersAdded > 0) {
+        await loadUsers();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$totalUsersAdded users uploaded successfully')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No valid users found in the Excel file')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error uploading Excel file: $e')));
+      print('Excel upload error: $e');
     }
   }
 
@@ -129,10 +154,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             onPressed: () async {
               final updatedUser = User(
                 code: user.code,
-                username: _editUsernameController.text,
-                department: _editDepartmentController.text,
+                username: _editUsernameController.text.trim(),
+                department: _editDepartmentController.text.trim(),
                 role: user.role,
-                password: _editPasswordController.text,
+                password: _editPasswordController.text.trim(),
               );
               await DatabaseService.instance.updateUser(updatedUser);
               Navigator.pop(context);
