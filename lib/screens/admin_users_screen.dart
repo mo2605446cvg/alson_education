@@ -46,12 +46,32 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         final sheetData = excel.sheets[sheet];
         if (sheetData == null) continue;
 
-        final department = sheet; // اسم الورقة هو القسم
-        for (var row in sheetData.rows.skip(1)) { // تخطي العنوان إذا كان موجودًا
-          if (row.length >= 2) {
-            final username = row[0]?.value?.toString() ?? '';
-            final password = row[1]?.value?.toString() ?? '';
-            final code = DateTime.now().millisecondsSinceEpoch.toString(); // كود فريد
+        final department = sheet; // عنوان الورقة هو القسم
+        final headers = sheetData.rows[0]; // الصف الأول يحتوي على العناوين
+        int nameIndex = -1;
+        int codeIndex = -1;
+
+        // البحث عن موقع العناوين في الصف الأول
+        for (int i = 0; i < headers.length; i++) {
+          final headerValue = headers[i]?.value?.toString().toLowerCase();
+          if (headerValue == 'الاسم' || headerValue == 'name') {
+            nameIndex = i;
+          } else if (headerValue == 'كود الطالب' || headerValue == 'student code') {
+            codeIndex = i;
+          }
+        }
+
+        if (nameIndex == -1 || codeIndex == -1) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel file must contain "الاسم" and "كود الطالب" headers')));
+          return;
+        }
+
+        // قراءة البيانات من الصف الثاني فصاعدًا
+        for (var row in sheetData.rows.skip(1)) {
+          if (row.length > nameIndex && row.length > codeIndex) {
+            final username = row[nameIndex]?.value?.toString() ?? '';
+            final password = row[codeIndex]?.value?.toString() ?? '';
+            final code = password; // استخدام كود الطالب كـ code
 
             if (username.isNotEmpty && password.isNotEmpty) {
               final user = User(
@@ -66,11 +86,62 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           }
         }
       }
-      await loadUsers(); // تحديث قائمة المستخدمين
+      await loadUsers();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Users uploaded successfully')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to upload Excel file')));
     }
+  }
+
+  Future<void> editUser(User user) async {
+    final _editUsernameController = TextEditingController(text: user.username);
+    final _editDepartmentController = TextEditingController(text: user.department);
+    final _editPasswordController = TextEditingController(text: user.password);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit User'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _editUsernameController,
+              decoration: const InputDecoration(labelText: 'Username'),
+            ),
+            TextField(
+              controller: _editDepartmentController,
+              decoration: const InputDecoration(labelText: 'Department'),
+            ),
+            TextField(
+              controller: _editPasswordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedUser = User(
+                code: user.code,
+                username: _editUsernameController.text,
+                department: _editDepartmentController.text,
+                role: user.role,
+                password: _editPasswordController.text,
+              );
+              await DatabaseService.instance.updateUser(updatedUser);
+              Navigator.pop(context);
+              await loadUsers();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -110,23 +181,48 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 users.isEmpty
                     ? const Text('No users found', textAlign: TextAlign.center)
                     : SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: ListView.builder(
-                          itemCount: users.length,
-                          itemBuilder: (context, index) {
-                            final user = users[index];
-                            return ListTile(
-                              title: Text(user.username, textAlign: TextAlign.center),
-                              subtitle: Text('${user.code} - ${user.department}', textAlign: TextAlign.center),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  await DatabaseService.instance.deleteUser(user.code);
-                                  loadUsers();
-                                },
-                              ),
-                            );
-                          },
+                        width: double.infinity,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(label: Text('Code')),
+                              DataColumn(label: Text('Username')),
+                              DataColumn(label: Text('Department')),
+                              DataColumn(label: Text('Role')),
+                              DataColumn(label: Text('Password')),
+                              DataColumn(label: Text('Actions')),
+                            ],
+                            rows: users.map((user) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(user.code)),
+                                  DataCell(Text(user.username)),
+                                  DataCell(Text(user.department)),
+                                  DataCell(Text(user.role)),
+                                  DataCell(Text(user.password)),
+                                  DataCell(
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () => editUser(user),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () async {
+                                            await DatabaseService.instance.deleteUser(user.code);
+                                            loadUsers();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
               ],
