@@ -73,18 +73,57 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         final department = sheet; // اسم الورقة هو القسم
         print('Processing sheet: $department');
 
-        // قراءة البيانات من جميع الصفوف (بدون افتراض عناوين في الصف الأول)
-        for (var row in sheetData.rows) {
-          if (row.isEmpty || row.length < 2 || row[0] == null || row[1] == null) {
-            print('Skipping empty or invalid row: $row');
-            continue; // تجاهل الصفوف الفارغة أو التي تحتوي على أقل من عمودين
+        int nameIndex = -1;
+        int codeIndex = -1;
+        int headerRowIndex = -1;
+
+        // البحث عن الصف الذي يحتوي على العناوين "الاسم" و"كود الطالب"
+        for (int rowIndex = 0; rowIndex < sheetData.rows.length; rowIndex++) {
+          final row = sheetData.rows[rowIndex];
+          nameIndex = -1;
+          codeIndex = -1;
+
+          for (int i = 0; i < row.length; i++) {
+            final cellValue = row[i]?.value?.toString().trim();
+            if (cellValue == null) continue;
+
+            print('Row $rowIndex, Column $i: $cellValue');
+            if (cellValue == 'الاسم' || cellValue.toLowerCase() == 'name') {
+              nameIndex = i;
+            } else if (cellValue == 'كود الطالب' || cellValue.toLowerCase() == 'student code') {
+              codeIndex = i;
+            }
           }
 
-          final username = row[0]?.value?.toString().trim() ?? '';
-          final password = row[1]?.value?.toString().trim() ?? '';
+          // إذا تم العثور على العناوين في هذا الصف، قم بتخزين الموقع وتوقف عن البحث
+          if (nameIndex != -1 && codeIndex != -1) {
+            headerRowIndex = rowIndex;
+            break;
+          }
+        }
+
+        // التحقق من العثور على العناوين
+        if (headerRowIndex == -1 || nameIndex == -1 || codeIndex == -1) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not find "الاسم" and "كود الطالب" in any row')));
+          print('Headers not found in any row');
+          return;
+        }
+
+        print('Headers found at row $headerRowIndex: nameIndex=$nameIndex, codeIndex=$codeIndex');
+
+        // قراءة البيانات من الصف التالي لصف العناوين فصاعدًا
+        for (int rowIndex = headerRowIndex + 1; rowIndex < sheetData.rows.length; rowIndex++) {
+          final row = sheetData.rows[rowIndex];
+          if (row.isEmpty || row.length <= nameIndex || row.length <= codeIndex || row[nameIndex] == null || row[codeIndex] == null) {
+            print('Skipping empty or invalid row at index $rowIndex: $row');
+            continue; // تجاهل الصفوف الفارغة أو الناقصة
+          }
+
+          final username = row[nameIndex]?.value?.toString().trim() ?? '';
+          final password = row[codeIndex]?.value?.toString().trim() ?? '';
           final code = password; // استخدام كود الطالب كـ code
 
-          print('Processing row - Username: $username, Password/Code: $password');
+          print('Processing row $rowIndex - Username: $username, Password/Code: $password');
 
           if (username.isNotEmpty && password.isNotEmpty) {
             final user = User(
@@ -98,7 +137,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             totalUsersAdded++;
             print('User added: ${user.username}, Code: ${user.code}');
           } else {
-            print('Invalid data in row: Username or Password is empty');
+            print('Invalid data in row $rowIndex: Username or Password is empty');
           }
         }
       }
@@ -256,3 +295,4 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       ),
     );
   }
+}
