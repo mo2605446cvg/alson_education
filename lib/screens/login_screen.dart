@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
-import 'package:alson_education/constants/strings.dart';
+import 'package:alson_education/constants/app_strings.dart';
 import 'package:alson_education/models/user.dart';
 
 class LoginScreen extends StatefulWidget {
