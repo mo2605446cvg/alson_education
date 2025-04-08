@@ -13,6 +13,14 @@ class ResultsQueryScreen extends StatefulWidget {
 class _ResultsQueryScreenState extends State<ResultsQueryScreen> {
   final _studentIdController = TextEditingController();
 
+  void _navigateToResults(BuildContext context) {
+    if (_studentIdController.text.isNotEmpty) {
+      Navigator.pushNamed(context, '/view_results');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter student ID')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
@@ -39,7 +47,7 @@ class _ResultsQueryScreenState extends State<ResultsQueryScreen> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/view_results'),
+                  onPressed: () => _navigateToResults(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
