@@ -20,9 +20,18 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
 
   Future<void> uploadContent(FilePickerResult? result) async {
     final appState = Provider.of<AppState>(context, listen: false);
-    if (result != null && result.files.single.path != null && _titleController.text.isNotEmpty) {
+    if (result == null || result.files.single.path == null || _titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a title and select a file')));
+      return;
+    }
+
+    try {
       final file = result.files.single;
       final bytes = await File(file.path!).readAsBytes();
+      if (bytes.isEmpty) {
+        throw Exception('File is empty');
+      }
+
       final filePath = await StorageService.saveFile(file.name, bytes);
       final content = Content(
         id: DateTime.now().toString(),
@@ -33,9 +42,10 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         uploadDate: DateTime.now().toString(),
       );
       await DatabaseService.instance.insertContent(content);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Content uploaded')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a title and select a file')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Content uploaded successfully')));
+      _titleController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
     }
   }
 
