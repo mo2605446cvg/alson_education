@@ -25,8 +25,26 @@ class HomeScreen extends StatelessWidget {
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'logout') {
-                appState.logout();
-                Navigator.pushReplacementNamed(context, '/');
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(AppStrings.get('confirm_logout', appState.language) ?? 'Confirm Logout'),
+                    content: Text(AppStrings.get('are_you_sure', appState.language) ?? 'Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(AppStrings.get('cancel', appState.language) ?? 'Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          appState.logout();
+                          Navigator.pushReplacementNamed(context, '/');
+                        },
+                        child: Text(AppStrings.get('logout', appState.language) ?? 'Logout'),
+                      ),
+                    ],
+                  ),
+                );
               } else if (value == 'language') {
                 appState.setLanguage(appState.language == 'ar' ? 'en' : 'ar');
               } else {
@@ -41,8 +59,8 @@ class HomeScreen extends StatelessWidget {
               PopupMenuItem(value: 'help', child: Text(AppStrings.get('help', appState.language))),
               PopupMenuItem(value: 'language', child: Text(AppStrings.get('toggle_language', appState.language))),
               PopupMenuItem(value: 'logout', child: Text(AppStrings.get('logout', appState.language))),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/users', child: const Text('إدارة المستخدمين')),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/upload', child: const Text('رفع المحتوى')),
+              if (appState.isAdmin) PopupMenuItem(value: 'admin/users', child: const Text('Manage Users')),
+              if (appState.isAdmin) PopupMenuItem(value: 'admin/upload', child: const Text('Upload Content')),
             ],
           ),
         ],
@@ -61,18 +79,31 @@ class HomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                if (!appState.isAdmin) // عرض الجدول للمستخدمين فقط
-                  Card(
-                    elevation: 8,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          Text(AppStrings.get('schedule', appState.language)),
-                          Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
-                        ],
-                      ),
-                    ),
+                if (!appState.isAdmin)
+                  FutureBuilder<bool>(
+                    future: _checkScheduleExists(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      }
+                      if (snapshot.hasError) {
+                        return Text('Error loading schedule: ${snapshot.error}');
+                      }
+                      return snapshot.data!
+                          ? Card(
+                              elevation: 8,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Column(
+                                  children: [
+                                    Text(AppStrings.get('schedule', appState.language)),
+                                    Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : const Text('No schedule available');
+                    },
                   ),
               ],
             ),
@@ -80,5 +111,10 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<bool> _checkScheduleExists() async {
+    // هنا يمكنك التحقق من وجود الجدول في قاعدة البيانات أو الملفات
+    return true; // افتراضيًا، يمكن تغييره حسب الحاجة
   }
 }
