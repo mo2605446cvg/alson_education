@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final db = DatabaseService.instance;
-      final user = await db.getUser(_usernameController.text.trim());
+      final user = await db.getUserByUsername(_usernameController.text.trim()); // تعديل هنا
 
       if (user != null && user.password == _passwordController.text.trim()) {
         appState.login(user.username, user.code, user.role, user.department);
