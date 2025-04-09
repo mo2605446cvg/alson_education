@@ -58,7 +58,6 @@ class DatabaseService {
       )
     ''');
 
-    // جدول جديد لتخزين بيانات Excel
     await db.execute('''
       CREATE TABLE IF NOT EXISTS excel_users (
         id TEXT PRIMARY KEY,
@@ -117,6 +116,17 @@ class DatabaseService {
     return result.map((map) => User.fromMap(map)).toList();
   }
 
+  Future<User?> getUser(String code) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'code = ?',
+      whereArgs: [code],
+      limit: 1,
+    );
+    return result.isNotEmpty ? User.fromMap(result.first) : null;
+  }
+
   Future<User?> getUserByUsername(String username) async {
     final db = await database;
     final result = await db.query(
@@ -134,6 +144,25 @@ class DatabaseService {
       'users',
       user.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateUser(User user) async {
+    final db = await database;
+    await db.update(
+      'users',
+      user.toMap(),
+      where: 'code = ?',
+      whereArgs: [user.code],
+    );
+  }
+
+  Future<void> deleteUser(String code) async {
+    final db = await database;
+    await db.delete(
+      'users',
+      where: 'code = ?',
+      whereArgs: [code],
     );
   }
 
@@ -196,14 +225,13 @@ class DatabaseService {
     return result.map((map) => Lesson.fromMap(map)).toList();
   }
 
-  // دالة جديدة لحفظ بيانات Excel
   Future<void> insertExcelUsers(List<Map<String, dynamic>> data) async {
     final db = await database;
     for (var row in data) {
       await db.insert(
         'excel_users',
         {
-          'id': DateTime.now().millisecondsSinceEpoch.toString() + row['code']!, // إنشاء ID فريد
+          'id': DateTime.now().millisecondsSinceEpoch.toString() + row['code']!,
           'username': row['username'],
           'password': row['password'],
           'department': row['department'],
