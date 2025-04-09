@@ -14,6 +14,7 @@ class DatabaseService {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('alson_education.db');
+    await _ensureAdminUser();
     return _database!;
   }
 
@@ -21,7 +22,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB, onUpgrade: _onUpgrade);
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -56,19 +57,6 @@ class DatabaseService {
         is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
-
-    // إضافة فهارس
-    await db.execute('''CREATE INDEX idx_users_code ON users(code)''');
-    await db.execute('''CREATE INDEX idx_content_id ON content(id)''');
-    await db.execute('''CREATE INDEX idx_lessons_id ON lessons(id)''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''CREATE INDEX idx_users_code ON users(code)''');
-      await db.execute('''CREATE INDEX idx_content_id ON content(id)''');
-      await db.execute('''CREATE INDEX idx_lessons_id ON lessons(id)''');
-    }
   }
 
   Future<void> _ensureAdminUser() async {
@@ -87,7 +75,7 @@ class DatabaseService {
             username: 'Admin',
             department: 'إدارة',
             role: 'admin',
-            password: 'adminpass', // يجب تشفير هذا لاحقًا
+            password: 'adminpass',
           ).toMap(),
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
@@ -112,6 +100,18 @@ class DatabaseService {
       'users',
       where: 'code = ?',
       whereArgs: [code],
+      limit: 1,
+    );
+    return result.isNotEmpty ? User.fromMap(result.first) : null;
+  }
+
+  // دالة جديدة للبحث باستخدام username
+  Future<User?> getUserByUsername(String username) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
       limit: 1,
     );
     return result.isNotEmpty ? User.fromMap(result.first) : null;
