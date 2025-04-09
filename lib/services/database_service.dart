@@ -22,7 +22,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(path, version: 1, onCreate: _createDB, onUpgrade: _onUpgrade);
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -57,6 +57,29 @@ class DatabaseService {
         is_favorite INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    // جدول جديد لتخزين بيانات Excel
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS excel_users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        password TEXT NOT NULL,
+        department TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS excel_users (
+          id TEXT PRIMARY KEY,
+          username TEXT NOT NULL,
+          password TEXT NOT NULL,
+          department TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<void> _ensureAdminUser() async {
@@ -94,18 +117,6 @@ class DatabaseService {
     return result.map((map) => User.fromMap(map)).toList();
   }
 
-  Future<User?> getUser(String code) async {
-    final db = await database;
-    final result = await db.query(
-      'users',
-      where: 'code = ?',
-      whereArgs: [code],
-      limit: 1,
-    );
-    return result.isNotEmpty ? User.fromMap(result.first) : null;
-  }
-
-  // دالة جديدة للبحث باستخدام username
   Future<User?> getUserByUsername(String username) async {
     final db = await database;
     final result = await db.query(
@@ -123,25 +134,6 @@ class DatabaseService {
       'users',
       user.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> updateUser(User user) async {
-    final db = await database;
-    await db.update(
-      'users',
-      user.toMap(),
-      where: 'code = ?',
-      whereArgs: [user.code],
-    );
-  }
-
-  Future<void> deleteUser(String code) async {
-    final db = await database;
-    await db.delete(
-      'users',
-      where: 'code = ?',
-      whereArgs: [code],
     );
   }
 
@@ -202,5 +194,22 @@ class DatabaseService {
       whereArgs: ['%$query%', '%$query%'],
     );
     return result.map((map) => Lesson.fromMap(map)).toList();
+  }
+
+  // دالة جديدة لحفظ بيانات Excel
+  Future<void> insertExcelUsers(List<Map<String, dynamic>> data) async {
+    final db = await database;
+    for (var row in data) {
+      await db.insert(
+        'excel_users',
+        {
+          'id': DateTime.now().millisecondsSinceEpoch.toString() + row['code']!, // إنشاء ID فريد
+          'username': row['username'],
+          'password': row['password'],
+          'department': row['department'],
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
   }
 }
