@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return FutureBuilder<User?>(
-      future: DatabaseService.instance.getUser(appState.currentUserCode ?? ''),
+      future: DatabaseService.instance.getUser(appState.currentUserCode ?? ''), // استخدم getUser مع code
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
