@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:excel/excel.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/services/storage_service.dart';
@@ -18,7 +19,7 @@ class UploadContentScreen extends StatefulWidget {
 class _UploadContentScreenState extends State<UploadContentScreen> {
   final _titleController = TextEditingController();
 
-  Future<void> uploadContent(FilePickerResult? result) async {
+  Future<void> uploadExcelFile(FilePickerResult? result) async {
     final appState = Provider.of<AppState>(context, listen: false);
     if (result == null || result.files.single.path == null || _titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide a title and select a file')));
@@ -32,7 +33,27 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         throw Exception('File is empty');
       }
 
+      // حفظ الملف في التخزين المحلي
       final filePath = await StorageService.saveFile(file.name, bytes);
+
+      // قراءة ملف Excel
+      var excel = Excel.decodeBytes(bytes);
+      var sheet = excel.tables.entries.first.value; // الحصول على الورقة الأولى
+      String department = excel.tables.keys.first; // استخدام اسم الورقة كـ department
+
+      // استخراج البيانات من Excel (تخطي العنوان)
+      List<Map<String, dynamic>> excelData = [];
+      for (var row in sheet.rows.skip(1)) {
+        if (row.length >= 2) { // تأكد من وجود بيانات كافية
+          excelData.add({
+            'code': row[0]?.value.toString(), // كود الطالب (سيكون كلمة المرور)
+            'username': row[1]?.value.toString(), // الاسم (اسم المستخدم)
+            'department': department, // اسم الورقة كقسم
+          });
+        }
+      }
+
+      // حفظ الملف كمحتوى
       final content = Content(
         id: DateTime.now().toString(),
         title: _titleController.text,
@@ -42,7 +63,11 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         uploadDate: DateTime.now().toString(),
       );
       await DatabaseService.instance.insertContent(content);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Content uploaded successfully')));
+
+      // حفظ بيانات Excel في جدول excel_users
+      await DatabaseService.instance.insertExcelUsers(excelData);
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel file and data uploaded successfully')));
       _titleController.clear();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
@@ -78,9 +103,9 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
                   onPressed: () async {
                     final result = await FilePicker.platform.pickFiles(
                       type: FileType.custom,
-                      allowedExtensions: ['jpg', 'png', 'pdf', 'txt'],
+                      allowedExtensions: ['xlsx', 'xls'], // دعم ملفات Excel
                     );
-                    uploadContent(result);
+                    uploadExcelFile(result);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
