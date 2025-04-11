@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 import 'package:alson_education/models/user.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return FutureBuilder<User?>(
-      future: DatabaseService.instance.getUser(appState.currentUserCode ?? ''), // استخدم getUser مع code
+      future: DatabaseService().getUserByUsername(appState.currentUserEmail ?? ''), // استخدام username
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
