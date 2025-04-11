@@ -1,0 +1,123 @@
+name: Build Flutter for All Platforms
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - uses: android-actions/setup-android@v2
+      - run: |
+          yes | sdkmanager --install "platforms;android-34"
+          yes | sdkmanager --install "build-tools;34.0.0"
+      - run: flutter pub get
+      - run: flutter create --platforms=android . # تهيئة المشروع للأندرويد
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter create --platforms=ios . # تهيئة المشروع للـ iOS
+      - run: flutter build ios --release --no-codesign
+      - run: zip -r ios-app.zip build/ios/iphoneos/Runner.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: ios-app.zip
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter config --enable-web
+      - run: flutter create --platforms=web . # تهيئة المشروع للويب
+      - run: flutter build web
+      - run: zip -r web-app.zip build/web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-app
+          path: web-app.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter config --enable-windows-desktop
+      - run: flutter create --platforms=windows . # تهيئة المشروع لـ Windows
+      - run: flutter build windows
+      - run: powershell -Command "Compress-Archive -Path build/windows/x64/runner/Release -DestinationPath windows-app.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: windows-app.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter config --enable-macos-desktop
+      - run: flutter create --platforms=macos . # تهيئة المشروع لـ macOS
+      - run: flutter build macos
+      - run: zip -r macos-app.zip build/macos/Build/Products/Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: macos-app.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+      - run: sudo apt-get update -y
+      - run: sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev # إضافة libsecret-1-dev
+      - run: flutter pub get
+      - run: flutter config --enable-linux-desktop
+      - run: flutter create --platforms=linux . # تهيئة المشروع لـ Linux
+      - run: flutter build linux
+      - run: zip -r linux-app.zip build/linux/x64/release/bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: linux-app.zip
