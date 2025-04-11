@@ -9,6 +9,7 @@ class DatabaseService {
 
   Future<List<User>> getUsers() async {
     final response = await http.get(Uri.parse('$baseUrl/users'));
+    print("GET Users response: Status ${response.statusCode}, Body: ${response.body}");
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => User.fromMap(json)).toList();
@@ -18,7 +19,9 @@ class DatabaseService {
   }
 
   Future<User?> getUserByUsername(String username) async {
+    print("Fetching user with username: $username");
     final response = await http.get(Uri.parse('$baseUrl/users/$username'));
+    print("GET User response: Status ${response.statusCode}, Body: ${response.body}");
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data != null ? User.fromMap(data) : null;
@@ -100,10 +103,9 @@ class DatabaseService {
     }
   }
 
-  // الدالتين الجديدتين
   Future<void> updateUser(User user) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/users/${user.code}'), // افترض إن الكود هو الـ identifier
+      Uri.parse('$baseUrl/users/${user.code}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(user.toMap()),
     );
