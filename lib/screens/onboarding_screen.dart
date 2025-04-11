@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/screens/login_screen.dart';
 import 'package:alson_education/constants/app_strings.dart';
-import 'package:alson_education/providers/app_state_provider.dart';
-import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
