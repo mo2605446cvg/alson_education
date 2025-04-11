@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreen extends StatelessWidget {
