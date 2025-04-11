@@ -12,16 +12,9 @@ import 'package:alson_education/screens/view_results_screen.dart';
 import 'package:alson_education/screens/help_screen.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/providers/theme_provider.dart';
-import 'package:alson_education/services/database_service.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await DatabaseService.instance.database; // تهيئة قاعدة البيانات
-    runApp(const AlsonEducation());
-  } catch (e) {
-    runApp(ErrorScreen(errorMessage: 'Failed to initialize database: $e'));
-  }
+void main() {
+  runApp(const AlsonEducation());
 }
 
 class AlsonEducation extends StatelessWidget {
@@ -48,7 +41,7 @@ class AlsonEducation extends StatelessWidget {
               '/content': (context) => const ContentScreen(),
               '/chat': (context) => const ChatScreen(),
               '/results': (context) => const ResultsQueryScreen(),
-              '/view_results': (context) => ViewResultsScreen(), // لا يحتاج إلى const
+              '/view_results': (context) => ViewResultsScreen(),
               '/help': (context) => const HelpScreen(),
               '/error': (context) => const ErrorScreen(errorMessage: 'An error occurred'),
             },
