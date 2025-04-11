@@ -7,7 +7,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/services/storage_service.dart';
 import 'package:alson_education/models/content.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 
 class UploadContentScreen extends StatefulWidget {
   const UploadContentScreen({super.key});
@@ -38,17 +38,17 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
 
       // قراءة ملف Excel
       var excel = Excel.decodeBytes(bytes);
-      var sheet = excel.tables.entries.first.value; // الحصول على الورقة الأولى
-      String department = excel.tables.keys.first; // استخدام اسم الورقة كـ department
+      var sheet = excel.tables.entries.first.value;
+      String department = excel.tables.keys.first;
 
       // استخراج البيانات من Excel (تخطي العنوان)
       List<Map<String, dynamic>> excelData = [];
       for (var row in sheet.rows.skip(1)) {
-        if (row.length >= 2) { // تأكد من وجود بيانات كافية
+        if (row.length >= 2) {
           excelData.add({
             'code': row[0]?.value.toString(), // كود الطالب (سيكون كلمة المرور)
             'username': row[1]?.value.toString(), // الاسم (اسم المستخدم)
-            'department': department, // اسم الورقة كقسم
+            'department': department,
           });
         }
       }
@@ -62,10 +62,18 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         uploadedBy: appState.currentUserCode!,
         uploadDate: DateTime.now().toString(),
       );
-      await DatabaseService.instance.insertContent(content);
+      await DatabaseService().insertContent(content);
 
-      // حفظ بيانات Excel في جدول excel_users
-      await DatabaseService.instance.insertExcelUsers(excelData);
+      // حفظ بيانات Excel في قاعدة البيانات على الخادم
+      for (var row in excelData) {
+        await DatabaseService().insertUser(User(
+          code: row['code'] ?? '',
+          username: row['username'] ?? '',
+          department: row['department'] ?? '',
+          role: 'user', // افتراضي، يمكن تعديله
+          password: row['code'] ?? '', // استخدام الكود ككلمة مرور
+        ));
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel file and data uploaded successfully')));
       _titleController.clear();
@@ -103,7 +111,7 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
                   onPressed: () async {
                     final result = await FilePicker.platform.pickFiles(
                       type: FileType.custom,
-                      allowedExtensions: ['xlsx', 'xls'], // دعم ملفات Excel
+                      allowedExtensions: ['xlsx', 'xls'],
                     );
                     uploadExcelFile(result);
                   },
