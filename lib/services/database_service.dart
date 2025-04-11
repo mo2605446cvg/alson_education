@@ -99,4 +99,26 @@ class DatabaseService {
       throw Exception('Failed to search lessons: ${response.statusCode} - ${response.body}');
     }
   }
+
+  // الدالتين الجديدتين
+  Future<void> updateUser(User user) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/${user.code}'), // افترض إن الكود هو الـ identifier
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(user.toMap()),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update user: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  Future<void> deleteUser(String code) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/$code'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete user: ${response.statusCode} - ${response.body}');
+    }
+  }
 }
