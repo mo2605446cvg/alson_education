@@ -18,7 +18,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   @override
   void initState() {
     super.initState();
-    _usersFuture = DatabaseService.instance.getUsers();
+    _usersFuture = DatabaseService().getUsers();
   }
 
   Future<void> _updateUser(User user) async {
@@ -30,9 +30,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       password: user.password,
     );
     try {
-      await DatabaseService.instance.updateUser(updatedUser);
+      await DatabaseService().updateUser(updatedUser);
       setState(() {
-        _usersFuture = DatabaseService.instance.getUsers();
+        _usersFuture = DatabaseService().getUsers();
       });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User updated')));
     } catch (e) {
@@ -42,9 +42,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   Future<void> _deleteUser(String code) async {
     try {
-      await DatabaseService.instance.deleteUser(code);
+      await DatabaseService().deleteUser(code);
       setState(() {
-        _usersFuture = DatabaseService.instance.getUsers();
+        _usersFuture = DatabaseService().getUsers();
       });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User deleted')));
     } catch (e) {
