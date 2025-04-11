@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/providers/theme_provider.dart';
 import 'package:alson_education/constants/colors.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -80,30 +80,17 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 if (!appState.isAdmin)
-                  FutureBuilder<bool>(
-                    future: _checkScheduleExists(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Error loading schedule: ${snapshot.error}');
-                      }
-                      return snapshot.data!
-                          ? Card(
-                              elevation: 8,
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Column(
-                                  children: [
-                                    Text(AppStrings.get('schedule', appState.language)),
-                                    Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : const Text('No schedule available');
-                    },
+                  Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        children: [
+                          Text(AppStrings.get('schedule', appState.language)),
+                          Image.asset('assets/img/po.jpg', width: 340, fit: BoxFit.cover),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -111,10 +98,5 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<bool> _checkScheduleExists() async {
-    // هنا يمكنك التحقق من وجود الجدول في قاعدة البيانات أو الملفات
-    return true; // افتراضيًا، يمكن تغييره حسب الحاجة
   }
 }
