@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 import 'package:alson_education/models/user.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,11 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
     appState.setLoading(true);
 
     try {
-      final db = DatabaseService.instance;
-      final user = await db.getUserByUsername(_usernameController.text.trim()); // تعديل هنا
+      final db = DatabaseService();
+      final user = await db.getUserByUsername(_usernameController.text.trim());
 
       if (user != null && user.password == _passwordController.text.trim()) {
-        appState.login(user.username, user.code, user.role, user.department);
+        appState.login(user.username, user.code ?? '', user.role ?? '', user.department ?? '');
         Navigator.pushReplacementNamed(context, '/home');
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
       } else {
