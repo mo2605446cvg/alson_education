@@ -29,6 +29,10 @@ class AppStrings {
       'student_id': 'رقم الجلوس',
       'view_results': 'عرض النتائج',
       'contact_us': 'تواصلوا معنا',
+      'confirm_logout': 'تأكيد تسجيل الخروج',
+      'are_you_sure': 'هل أنت متأكد من تسجيل الخروج؟',
+      'cancel': 'إلغاء',
+      'no_messages': 'لا توجد رسائل بعد',
     },
     'en': {
       'welcome': 'Welcome to Alson!',
@@ -59,6 +63,10 @@ class AppStrings {
       'student_id': 'Student ID',
       'view_results': 'View Results',
       'contact_us': 'Contact Us',
+      'confirm_logout': 'Confirm Logout',
+      'are_you_sure': 'Are you sure you want to logout?',
+      'cancel': 'Cancel',
+      'no_messages': 'No messages yet',
     },
   };
 
