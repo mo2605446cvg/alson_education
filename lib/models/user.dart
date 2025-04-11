@@ -25,11 +25,11 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      code: map['code'] as String,
-      username: map['username'] as String,
-      department: map['department'] as String,
-      role: map['role'] as String,
-      password: map['password'] as String,
+      code: map['code'] as String? ?? '',
+      username: map['username'] as String? ?? '',
+      department: map['department'] as String? ?? '',
+      role: map['role'] as String? ?? '',
+      password: map['password'] as String? ?? '',
     );
   }
 }
