@@ -29,11 +29,11 @@ class Content {
   factory Content.fromMap(Map<String, dynamic> map) {
     return Content(
       id: map['id'] as String?,
-      title: map['title'] as String,
-      filePath: map['file_path'] as String,
-      fileType: map['file_type'] as String,
-      uploadedBy: map['uploaded_by'] as String,
-      uploadDate: map['upload_date'] as String,
+      title: map['title'] as String? ?? '',
+      filePath: map['file_path'] as String? ?? '',
+      fileType: map['file_type'] as String? ?? '',
+      uploadedBy: map['uploaded_by'] as String? ?? '',
+      uploadDate: map['upload_date'] as String? ?? '',
     );
   }
 }
