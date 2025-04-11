@@ -1,243 +1,102 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/models/lesson.dart';
 
 class DatabaseService {
-  static final DatabaseService instance = DatabaseService._init();
-  static Database? _database;
-
-  DatabaseService._init();
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('alson_education.db');
-    await _ensureAdminUser();
-    return _database!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(path, version: 1, onCreate: _createDB, onUpgrade: _onUpgrade);
-  }
-
-  Future<void> _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS users (
-        code TEXT PRIMARY KEY,
-        username TEXT NOT NULL,
-        department TEXT NOT NULL,
-        role TEXT NOT NULL,
-        password TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS content (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        file_path TEXT NOT NULL,
-        file_type TEXT NOT NULL,
-        uploaded_by TEXT NOT NULL,
-        upload_date TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS lessons (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        category TEXT NOT NULL,
-        level TEXT NOT NULL,
-        is_favorite INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS excel_users (
-        id TEXT PRIMARY KEY,
-        username TEXT NOT NULL,
-        password TEXT NOT NULL,
-        department TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS excel_users (
-          id TEXT PRIMARY KEY,
-          username TEXT NOT NULL,
-          password TEXT NOT NULL,
-          department TEXT NOT NULL
-        )
-      ''');
-    }
-  }
-
-  Future<void> _ensureAdminUser() async {
-    final db = await database;
-    try {
-      final adminExists = await db.query(
-        'users',
-        where: 'code = ?',
-        whereArgs: ['admin123'],
-      );
-      if (adminExists.isEmpty) {
-        await db.insert(
-          'users',
-          User(
-            code: 'admin123',
-            username: 'Admin',
-            department: 'إدارة',
-            role: 'admin',
-            password: 'adminpass',
-          ).toMap(),
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
-        print('Admin user created');
-      } else {
-        print('Admin user already exists');
-      }
-    } catch (e) {
-      print('Error ensuring admin user: $e');
-    }
-  }
+  static const String baseUrl = 'http://alalsunacademy.com/api/api.php';
 
   Future<List<User>> getUsers() async {
-    final db = await database;
-    final result = await db.query('users');
-    return result.map((map) => User.fromMap(map)).toList();
-  }
-
-  Future<User?> getUser(String code) async {
-    final db = await database;
-    final result = await db.query(
-      'users',
-      where: 'code = ?',
-      whereArgs: [code],
-      limit: 1,
-    );
-    return result.isNotEmpty ? User.fromMap(result.first) : null;
+    final response = await http.get(Uri.parse('$baseUrl/users'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromMap(json)).toList();
+    } else {
+      throw Exception('Failed to load users: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<User?> getUserByUsername(String username) async {
-    final db = await database;
-    final result = await db.query(
-      'users',
-      where: 'username = ?',
-      whereArgs: [username],
-      limit: 1,
-    );
-    return result.isNotEmpty ? User.fromMap(result.first) : null;
+    final response = await http.get(Uri.parse('$baseUrl/users/$username'));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data != null ? User.fromMap(data) : null;
+    } else {
+      throw Exception('Failed to load user: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<void> insertUser(User user) async {
-    final db = await database;
-    await db.insert(
-      'users',
-      user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+    final response = await http.post(
+      Uri.parse('$baseUrl/users'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(user.toMap()),
     );
-  }
-
-  Future<void> updateUser(User user) async {
-    final db = await database;
-    await db.update(
-      'users',
-      user.toMap(),
-      where: 'code = ?',
-      whereArgs: [user.code],
-    );
-  }
-
-  Future<void> deleteUser(String code) async {
-    final db = await database;
-    await db.delete(
-      'users',
-      where: 'code = ?',
-      whereArgs: [code],
-    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to insert user: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<List<Content>> getContents() async {
-    final db = await database;
-    final result = await db.query('content');
-    return result.map((map) => Content.fromMap(map)).toList();
+    final response = await http.get(Uri.parse('$baseUrl/content'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Content.fromMap(json)).toList();
+    } else {
+      throw Exception('Failed to load content: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<void> insertContent(Content content) async {
-    final db = await database;
-    await db.insert(
-      'content',
-      content.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+    final response = await http.post(
+      Uri.parse('$baseUrl/content'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(content.toMap()),
     );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to insert content: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<List<Lesson>> getLessons() async {
-    final db = await database;
-    final result = await db.query('lessons');
-    return result.map((map) => Lesson.fromMap(map)).toList();
+    final response = await http.get(Uri.parse('$baseUrl/lessons'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Lesson.fromMap(json)).toList();
+    } else {
+      throw Exception('Failed to load lessons: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<void> insertLesson(Lesson lesson) async {
-    final db = await database;
-    await db.insert(
-      'lessons',
-      lesson.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+    final response = await http.post(
+      Uri.parse('$baseUrl/lessons'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(lesson.toMap()),
     );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to insert lesson: ${response.statusCode} - ${response.body}');
+    }
   }
 
   Future<void> toggleFavoriteLesson(String id) async {
-    final db = await database;
-    final lessonResult = await db.query(
-      'lessons',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
+    final response = await http.put(
+      Uri.parse('$baseUrl/lessons/$id/toggle'),
+      headers: {'Content-Type': 'application/json'},
     );
-    if (lessonResult.isNotEmpty) {
-      final lesson = Lesson.fromMap(lessonResult.first);
-      await db.update(
-        'lessons',
-        {'is_favorite': lesson.isFavorite ? 0 : 1},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to toggle favorite: ${response.statusCode} - ${response.body}');
     }
   }
 
   Future<List<Lesson>> searchLessons(String query) async {
-    final db = await database;
-    final result = await db.query(
-      'lessons',
-      where: 'title LIKE ? OR content LIKE ?',
-      whereArgs: ['%$query%', '%$query%'],
-    );
-    return result.map((map) => Lesson.fromMap(map)).toList();
-  }
-
-  Future<void> insertExcelUsers(List<Map<String, dynamic>> data) async {
-    final db = await database;
-    for (var row in data) {
-      await db.insert(
-        'excel_users',
-        {
-          'id': DateTime.now().millisecondsSinceEpoch.toString() + row['code']!,
-          'username': row['username'],
-          'password': row['password'],
-          'department': row['department'],
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+    final response = await http.get(Uri.parse('$baseUrl/lessons/search?query=$query'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Lesson.fromMap(json)).toList();
+    } else {
+      throw Exception('Failed to search lessons: ${response.statusCode} - ${response.body}');
     }
   }
 }
