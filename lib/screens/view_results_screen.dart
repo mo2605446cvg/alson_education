@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
-import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/constants/strings.dart';
 
 class ViewResultsScreen extends StatelessWidget {
   const ViewResultsScreen({super.key});
@@ -10,7 +10,6 @@ class ViewResultsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
 
-    // افتراضيًا، يمكن استرجاع النتائج من قاعدة البيانات أو API
     final Map<String, String> results = {
       'math': '85/100',
       'science': '92/100',
