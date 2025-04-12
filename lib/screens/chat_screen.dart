@@ -16,7 +16,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _addMessage(String message) {
     setState(() {
-      messages.add(message);
+      messages.add('${DateTime.now()}: $message'); // إضافة وقت
     });
     _messageController.clear();
   }
