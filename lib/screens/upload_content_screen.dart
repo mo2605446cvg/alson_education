@@ -7,7 +7,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/services/storage_service.dart';
 import 'package:alson_education/models/content.dart';
-import 'package:alson_education/models/user.dart'; // استيراد User
+import 'package:alson_education/models/user.dart';
 import 'package:alson_education/constants/app_strings.dart';
 
 class UploadContentScreen extends StatefulWidget {
@@ -34,27 +34,23 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
         throw Exception('File is empty');
       }
 
-      // حفظ الملف في التخزين المحلي
       final filePath = await StorageService.saveFile(file.name, bytes);
 
-      // قراءة ملف Excel
       var excel = Excel.decodeBytes(bytes);
       var sheet = excel.tables.entries.first.value;
-      String department = excel.tables.keys.first;
+      String department = excel.tables.keys.first; // افتراض إن الـ department في اسم الـ sheet
 
-      // استخراج البيانات من Excel (تخطي العنوان)
       List<Map<String, dynamic>> excelData = [];
       for (var row in sheet.rows.skip(1)) {
         if (row.length >= 2) {
           excelData.add({
-            'code': row[0]?.value.toString(), // كود الطالب (سيكون كلمة المرور)
-            'username': row[1]?.value.toString(), // الاسم (اسم المستخدم)
+            'code': row[0]?.value.toString(),
+            'username': row[1]?.value.toString(),
             'department': department,
           });
         }
       }
 
-      // حفظ الملف كمحتوى
       final content = Content(
         id: DateTime.now().toString(),
         title: _titleController.text,
@@ -65,14 +61,13 @@ class _UploadContentScreenState extends State<UploadContentScreen> {
       );
       await DatabaseService().insertContent(content);
 
-      // حفظ بيانات Excel في قاعدة البيانات على الخادم
       for (var row in excelData) {
         await DatabaseService().insertUser(User(
           code: row['code'] ?? '',
           username: row['username'] ?? '',
           department: row['department'] ?? '',
-          role: 'user', // افتراضي، يمكن تعديله
-          password: row['code'] ?? '', // استخدام الكود ككلمة مرور
+          role: 'user',
+          password: row['code'] ?? '',
         ));
       }
 
