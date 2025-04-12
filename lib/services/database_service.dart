@@ -6,11 +6,11 @@ import 'package:alson_education/models/lesson.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 
 class DatabaseService {
-  static const String baseUrl = 'http://srv1690.hstgr.io/api/api.php'; // يمكن تغييره لـ IP
+  static const String baseUrl = 'https://alalsunacademy.com/api/api.php/users'; // استخدام HTTPS
 
   Future<List<User>> getUsers() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/users'));
+      final response = await http.get(Uri.parse('$baseUrl/users')).timeout(const Duration(seconds: 10));
       print("GET Users response: Status ${response.statusCode}, Body: ${response.body}");
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -27,7 +27,7 @@ class DatabaseService {
   Future<User?> getUserByUsername(String username) async {
     try {
       print("Fetching user with username: $username");
-      final response = await http.get(Uri.parse('$baseUrl/users/$username'));
+      final response = await http.get(Uri.parse('$baseUrl/users/$username')).timeout(const Duration(seconds: 10));
       print("GET User response: Status ${response.statusCode}, Body: ${response.body}");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -52,9 +52,9 @@ class DatabaseService {
     }
   }
 
-  Future<List<Content>> getContents(String department) async { // فلترة بناءً على القسم
+  Future<List<Content>> getContents(String department) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/content?department=$department'));
+      final response = await http.get(Uri.parse('$baseUrl/content?department=$department')).timeout(const Duration(seconds: 10));
       print("GET Contents response: Status ${response.statusCode}, Body: ${response.body}");
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -79,9 +79,9 @@ class DatabaseService {
     }
   }
 
-  Future<List<Lesson>> getLessons(String department) async { // فلترة بناءً على القسم
+  Future<List<Lesson>> getLessons(String department) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/lessons?department=$department'));
+      final response = await http.get(Uri.parse('$baseUrl/lessons?department=$department')).timeout(const Duration(seconds: 10));
       print("GET Lessons response: Status ${response.statusCode}, Body: ${response.body}");
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
