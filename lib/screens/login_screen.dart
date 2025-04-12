@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
       print("Attempting to login with username: ${_usernameController.text}");
       final db = DatabaseService();
       final user = await db.getUserByUsername(_usernameController.text.trim());
+      print("User response: $user"); // إضافة لفحص الرد
 
       if (user != null) {
         print("User found: ${user.toMap()}");
