@@ -48,6 +48,7 @@ class _ContentScreenState extends State<ContentScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+    final department = appState.currentUserDepartment ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -55,7 +56,7 @@ class _ContentScreenState extends State<ContentScreen> {
         centerTitle: true,
       ),
       body: FutureBuilder<List<Content>>(
-        future: DatabaseService().getContents(),
+        future: DatabaseService().getContents(department), // فلترة حسب القسم
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
