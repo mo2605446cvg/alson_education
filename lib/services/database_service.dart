@@ -3,30 +3,41 @@ import 'dart:convert';
 import 'package:alson_education/models/user.dart';
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/models/lesson.dart';
+import 'package:alson_education/providers/app_state_provider.dart';
 
 class DatabaseService {
-  static const String baseUrl = 'http://alalsunacademy.com/api/api.php';
+  static const String baseUrl = 'http://srv1690.hstgr.io/api/api.php'; // يمكن تغييره لـ IP
 
   Future<List<User>> getUsers() async {
-    final response = await http.get(Uri.parse('$baseUrl/users'));
-    print("GET Users response: Status ${response.statusCode}, Body: ${response.body}");
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => User.fromMap(json)).toList();
-    } else {
-      throw Exception('Failed to load users: ${response.statusCode} - ${response.body}');
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/users'));
+      print("GET Users response: Status ${response.statusCode}, Body: ${response.body}");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => User.fromMap(json)).toList();
+      } else {
+        throw Exception('Failed to load users: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print("Network error in getUsers: $e");
+      throw Exception('Network error: $e');
     }
   }
 
   Future<User?> getUserByUsername(String username) async {
-    print("Fetching user with username: $username");
-    final response = await http.get(Uri.parse('$baseUrl/users/$username'));
-    print("GET User response: Status ${response.statusCode}, Body: ${response.body}");
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data != null ? User.fromMap(data) : null;
-    } else {
-      throw Exception('Failed to load user: ${response.statusCode} - ${response.body}');
+    try {
+      print("Fetching user with username: $username");
+      final response = await http.get(Uri.parse('$baseUrl/users/$username'));
+      print("GET User response: Status ${response.statusCode}, Body: ${response.body}");
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data != null ? User.fromMap(data) : null;
+      } else {
+        throw Exception('Failed to load user: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print("Network error in getUserByUsername: $e");
+      throw Exception('Network error: $e');
     }
   }
 
@@ -41,13 +52,19 @@ class DatabaseService {
     }
   }
 
-  Future<List<Content>> getContents() async {
-    final response = await http.get(Uri.parse('$baseUrl/content'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Content.fromMap(json)).toList();
-    } else {
-      throw Exception('Failed to load content: ${response.statusCode} - ${response.body}');
+  Future<List<Content>> getContents(String department) async { // فلترة بناءً على القسم
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/content?department=$department'));
+      print("GET Contents response: Status ${response.statusCode}, Body: ${response.body}");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Content.fromMap(json)).toList();
+      } else {
+        throw Exception('Failed to load content: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print("Network error in getContents: $e");
+      throw Exception('Network error: $e');
     }
   }
 
@@ -62,13 +79,19 @@ class DatabaseService {
     }
   }
 
-  Future<List<Lesson>> getLessons() async {
-    final response = await http.get(Uri.parse('$baseUrl/lessons'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Lesson.fromMap(json)).toList();
-    } else {
-      throw Exception('Failed to load lessons: ${response.statusCode} - ${response.body}');
+  Future<List<Lesson>> getLessons(String department) async { // فلترة بناءً على القسم
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/lessons?department=$department'));
+      print("GET Lessons response: Status ${response.statusCode}, Body: ${response.body}");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Lesson.fromMap(json)).toList();
+      } else {
+        throw Exception('Failed to load lessons: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print("Network error in getLessons: $e");
+      throw Exception('Network error: $e');
     }
   }
 
