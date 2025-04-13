@@ -23,6 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
+    namespace "com.example.alson_education" // أضف هذه السطر هنا
     compileSdk 34
 
     defaultConfig {
