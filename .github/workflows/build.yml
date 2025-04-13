@@ -36,9 +36,9 @@ jobs:
       - run: flutter clean
       - run: flutter pub get
       - name: Grant execute permission for gradlew
-      - run: chmod +x android/gradlew
+        run: chmod +x android/gradlew
       - name: Clean Gradle
-      - run: cd android && ./gradlew clean
+        run: cd android && ./gradlew clean
       - run: flutter create --platforms=android .
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
