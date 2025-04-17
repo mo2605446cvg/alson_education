@@ -2,9 +2,10 @@ class AppStrings {
   static const Map<String, Map<String, String>> _strings = {
     'ar': {
       'welcome': 'مرحبًا بك في الألسن!',
-      'intro': 'تعلم بسهولة مع دروس مصنفة',
+      'intro': '<----------------------->',
       'start': 'ابدأ الآن',
       'login': 'تسجيل الدخول',
+      'register': 'تسجيل حساب جديد',
       'username': 'اسم المستخدم',
       'password': 'كلمة المرور',
       'home': 'الرئيسية',
@@ -21,6 +22,7 @@ class AppStrings {
       'name': 'الاسم',
       'code': 'الكود',
       'department': 'القسم',
+      'division': 'الفرقة',
       'schedule': 'جدول القسم',
       'title': 'العنوان',
       'pick_file': 'اختر ملف',
@@ -33,12 +35,14 @@ class AppStrings {
       'are_you_sure': 'هل أنت متأكد من تسجيل الخروج؟',
       'cancel': 'إلغاء',
       'no_messages': 'لا توجد رسائل بعد',
+      'admin_dashboard': 'لوحة تحكم الأدمن',
     },
     'en': {
       'welcome': 'Welcome to Alson!',
-      'intro': 'Learn easily with categorized lessons',
+      'intro': '<----------------------->',
       'start': 'Start Now',
       'login': 'Login',
+      'register': 'Register',
       'username': 'Username',
       'password': 'Password',
       'home': 'Home',
@@ -55,6 +59,7 @@ class AppStrings {
       'name': 'Name',
       'code': 'Code',
       'department': 'Department',
+      'division': 'Division',
       'schedule': 'Department Schedule',
       'title': 'Title',
       'pick_file': 'Pick File',
@@ -67,6 +72,7 @@ class AppStrings {
       'are_you_sure': 'Are you sure you want to logout?',
       'cancel': 'Cancel',
       'no_messages': 'No messages yet',
+      'admin_dashboard': 'Admin Dashboard',
     },
   };
 
