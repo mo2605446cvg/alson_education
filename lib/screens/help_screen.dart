@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/constants/app_strings.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -21,10 +22,7 @@ class HelpScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.get('help', appState.language)),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(AppStrings.get('help', appState.language)),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
