@@ -22,30 +22,29 @@ class _LoginScreenState extends State<LoginScreen> {
     appState.setLoading(true);
 
     try {
-      print("Attempting to login with username: ${_usernameController.text}");
       final db = DatabaseService();
       final user = await db.getUserByUsername(_usernameController.text.trim());
-      print("User response: $user"); // إضافة لفحص الرد
 
       if (user != null) {
-        print("User found: ${user.toMap()}");
         if (user.password == _passwordController.text.trim()) {
-          print("Password matched, logging in...");
-          appState.login(user.username, user.code ?? '', user.role ?? '', user.department ?? '');
+          appState.login(
+            user.username,
+            user.code,
+            user.role,
+            user.department,
+            division: user.division,
+          );
           Navigator.pushReplacementNamed(context, '/home');
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
         } else {
-          print("Password mismatch");
           appState.setError('Invalid username or password');
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid username or password')));
         }
       } else {
-        print("User not found");
         appState.setError('User not found');
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not found')));
       }
     } catch (e) {
-      print("Error during login: $e");
       appState.setError('Login failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
     } finally {
@@ -104,6 +103,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: appState.isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(AppStrings.get('login', appState.language)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
+                  child: Text(AppStrings.get('register', appState.language)),
                 ),
               ],
             ),
