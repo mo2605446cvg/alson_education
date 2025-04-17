@@ -4,6 +4,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/app_strings.dart';
 import 'package:alson_education/models/user.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -26,6 +27,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       code: user.code,
       username: user.username,
       department: user.department,
+      division: user.division,
       role: user.role,
       password: user.password,
     );
@@ -57,10 +59,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.get('admin_users', appState.language)),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(AppStrings.get('admin_users', appState.language), isAdmin: appState.isAdmin),
       body: FutureBuilder<List<User>>(
         future: _usersFuture,
         builder: (context, snapshot) {
@@ -78,7 +77,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               final user = users[index];
               return ListTile(
                 title: Text(user.username),
-                subtitle: Text('Code: ${user.code}, Dept: ${user.department}'),
+                subtitle: Text('Code: ${user.code}, Dept: ${user.department}, Div: ${user.division}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
