@@ -5,6 +5,7 @@ import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/constants/colors.dart';
 import 'package:alson_education/constants/app_strings.dart';
 import 'package:alson_education/models/user.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -14,7 +15,7 @@ class ProfileScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return FutureBuilder<User?>(
-      future: DatabaseService().getUserByUsername(appState.currentUserEmail ?? ''), // استخدام username
+      future: DatabaseService().getUserByUsername(appState.currentUserEmail ?? ''),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -29,10 +30,7 @@ class ProfileScreen extends StatelessWidget {
 
         final user = snapshot.data!;
         return Scaffold(
-          appBar: AppBar(
-            title: Text(AppStrings.get('profile', appState.language)),
-            centerTitle: true,
-          ),
+          appBar: CustomAppBar(AppStrings.get('profile', appState.language)),
           body: Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -75,6 +73,14 @@ class ProfileScreen extends StatelessWidget {
                                 const Icon(Icons.group),
                                 const SizedBox(width: 10),
                                 Text('${AppStrings.get('department', appState.language)}: ${user.department}'),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.class_),
+                                const SizedBox(width: 10),
+                                Text('${AppStrings.get('division', appState.language)}: ${user.division}'),
                               ],
                             ),
                           ],
