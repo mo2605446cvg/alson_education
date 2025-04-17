@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/screens/login_screen.dart';
+import 'package:alson_education/screens/register_screen.dart';
 import 'package:alson_education/constants/app_strings.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -43,7 +44,21 @@ class OnboardingScreen extends StatelessWidget {
                     minimumSize: const Size(200, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(AppStrings.get('start', appState.language)),
+                  child: Text(AppStrings.get('login', appState.language)),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(200, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(AppStrings.get('register', appState.language)),
                 ),
               ],
             ),
