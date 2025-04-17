@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class ResultsQueryScreen extends StatefulWidget {
   const ResultsQueryScreen({super.key});
@@ -26,10 +27,7 @@ class _ResultsQueryScreenState extends State<ResultsQueryScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.get('results', appState.language)),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(AppStrings.get('results', appState.language)),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
