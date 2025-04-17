@@ -6,6 +6,7 @@ import 'package:alson_education/services/database_service.dart';
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/constants/app_strings.dart';
 import 'package:alson_education/providers/app_state_provider.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class ContentScreen extends StatefulWidget {
   const ContentScreen({super.key});
@@ -49,14 +50,12 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final department = appState.currentUserDepartment ?? '';
+    final division = appState.currentUserDivision ?? '';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.get('content', appState.language)),
-        centerTitle: true,
-      ),
+      appBar: CustomAppBar(AppStrings.get('content', appState.language), isAdmin: appState.isAdmin),
       body: FutureBuilder<List<Content>>(
-        future: DatabaseService().getContents(department), // فلترة حسب القسم
+        future: DatabaseService().getContents(department, division: division),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -67,15 +66,55 @@ class _ContentScreenState extends State<ContentScreen> {
           final contents = snapshot.data ?? [];
           return contents.isEmpty
               ? const Center(child: Text('No content available'))
-              : ListView.builder(
+              : GridView.builder(
                   padding: const EdgeInsets.all(20.0),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.7,
+                  ),
                   itemCount: contents.length,
                   itemBuilder: (context, index) {
                     final content = contents[index];
-                    return ListTile(
-                      title: Text(content.title, textAlign: TextAlign.center),
-                      subtitle: Text('Type: ${content.fileType}', textAlign: TextAlign.center),
-                      onTap: () => viewContent(content),
+                    return Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      child: InkWell(
+                        onTap: () => viewContent(content),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: content.posterPath != null && File(content.posterPath!).existsSync()
+                                  ? Image.file(
+                                      File(content.posterPath!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.image, size: 50),
+                                    ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                content.title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                'Type: ${content.fileType}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 );
