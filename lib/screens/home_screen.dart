@@ -4,6 +4,7 @@ import 'package:alson_education/providers/app_state_provider.dart';
 import 'package:alson_education/providers/theme_provider.dart';
 import 'package:alson_education/constants/colors.dart';
 import 'package:alson_education/constants/app_strings.dart';
+import 'package:alson_education/widgets/app_bar_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,56 +15,9 @@ class HomeScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.get('home', appState.language)),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: themeProvider.toggleTheme,
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(AppStrings.get('confirm_logout', appState.language) ?? 'Confirm Logout'),
-                    content: Text(AppStrings.get('are_you_sure', appState.language) ?? 'Are you sure you want to logout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(AppStrings.get('cancel', appState.language) ?? 'Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          appState.logout();
-                          Navigator.pushReplacementNamed(context, '/');
-                        },
-                        child: Text(AppStrings.get('logout', appState.language) ?? 'Logout'),
-                      ),
-                    ],
-                  ),
-                );
-              } else if (value == 'language') {
-                appState.setLanguage(appState.language == 'ar' ? 'en' : 'ar');
-              } else {
-                Navigator.pushNamed(context, '/$value');
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'profile', child: Text(AppStrings.get('profile', appState.language))),
-              PopupMenuItem(value: 'content', child: Text(AppStrings.get('content', appState.language))),
-              PopupMenuItem(value: 'chat', child: Text(AppStrings.get('chat', appState.language))),
-              PopupMenuItem(value: 'results', child: Text(AppStrings.get('results', appState.language))),
-              PopupMenuItem(value: 'help', child: Text(AppStrings.get('help', appState.language))),
-              PopupMenuItem(value: 'language', child: Text(AppStrings.get('toggle_language', appState.language))),
-              PopupMenuItem(value: 'logout', child: Text(AppStrings.get('logout', appState.language))),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/users', child: const Text('Manage Users')),
-              if (appState.isAdmin) PopupMenuItem(value: 'admin/upload', child: const Text('Upload Content')),
-            ],
-          ),
-        ],
+      appBar: CustomAppBar(
+        AppStrings.get('home', appState.language),
+        isAdmin: appState.isAdmin,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -91,6 +45,17 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+                if (appState.isAdmin)
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/admin/dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: PRIMARY_COLOR,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(200, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(AppStrings.get('admin_dashboard', appState.language)),
                   ),
               ],
             ),
