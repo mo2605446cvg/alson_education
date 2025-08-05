@@ -5,6 +5,7 @@ import 'package:alson_education/components/app_bar.dart';
 import 'package:alson_education/providers/user_provider.dart';
 import 'package:alson_education/utils/api.dart';
 import 'package:alson_education/utils/colors.dart';
+import 'package:alson_education/models/user.dart'; // Added import for User class
 
 class UserManagement extends StatefulWidget {
   const UserManagement({super.key});
