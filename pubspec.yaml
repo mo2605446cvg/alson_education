@@ -1,6 +1,4 @@
 name: alson_education
-description: A new Flutter project.
-
 publish_to: 'none'
 
 version: 0.0.1+1
@@ -34,3 +32,4 @@ flutter:
         - asset: fonts/Cairo-Regular.ttf
         - asset: fonts/Cairo-Bold.ttf
           weight: 700
+```
