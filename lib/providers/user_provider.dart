@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import '../models/user.dart';
+import 'package:alson_education/models/user.dart';
 
 class UserProvider with ChangeNotifier {
   User? _user;
@@ -17,3 +17,4 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+
