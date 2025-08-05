@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alson_education/providers/user_provider.dart';
@@ -12,6 +11,7 @@ import 'package:alson_education/screens/profile.dart';
 import 'package:alson_education/screens/results.dart';
 import 'package:alson_education/screens/help.dart';
 import 'package:alson_education/utils/api.dart';
+import 'package:alson_education/utils/colors.dart'; // Added import for primaryColor and textColor
 
 void main() {
   initializeNotifications();
