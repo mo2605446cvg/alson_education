@@ -26,11 +26,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/img/icon.png
-  fonts:
-    - family: Cairo
-      fonts:
-        - asset: fonts/Cairo-Regular.ttf
-        - asset: fonts/Cairo-Bold.ttf
-          weight: 700
 
 
