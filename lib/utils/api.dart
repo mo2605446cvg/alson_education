@@ -1,4 +1,4 @@
-```dart
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
@@ -330,4 +330,3 @@ Future<Result> getResults(String studentId) async {
     throw Exception('Failed to fetch results');
   }
 }
-```
