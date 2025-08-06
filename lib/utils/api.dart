@@ -6,7 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:alson_education/models/user.dart';
 
-const String apiUrl = 'http://ki74.alalsunacademy.com/api';
+const String apiUrl = 'https://ki74.alalsunacademy.com/api';
 
 void initializeNotifications() async {
   if (!kIsWeb) {
@@ -330,4 +330,5 @@ Future<Result> getResults(String studentId) async {
     throw Exception('Failed to fetch results');
   }
 }
+
 
