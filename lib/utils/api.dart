@@ -1,12 +1,12 @@
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:alson_education/models/user.dart';
 
-const String apiUrl = 'https://ki74.alalsunacademy.com/api';
+const String apiUrl = 'http://ki74.alalsunacademy.com/api';
 
 void initializeNotifications() async {
   if (!kIsWeb) {
@@ -50,21 +50,22 @@ void scheduleNotification(String title, String body) async {
 }
 
 Future<User> loginUser(String code, String password) async {
+  var connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult == ConnectivityResult.none) {
+    throw Exception('لا يوجد اتصال بالإنترنت');
+  }
+
   try {
     final response = await http.post(
       Uri.parse('$apiUrl/api.php?table=users&action=login'),
-      body: {'code': code, 'password': password},
+      body: jsonEncode({'code': code, 'password': password}),
+      headers: {'Content-Type': 'application/json'},
     );
-    print('Login response status: ${response.statusCode}');
-    print('Login response body: ${response.body}');
-
+    print('Login Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
-      print('Parsed JSON: $jsonResponse');
-      return User.fromJson(jsonResponse);
+      return User.fromJson(jsonDecode(response.body));
     } else {
-      final errorMessage = jsonDecode(response.body)['error'] ?? 'Failed to login: Status ${response.statusCode}';
-      throw Exception(errorMessage);
+      throw Exception('Failed to login: ${response.body}');
     }
   } catch (error) {
     print('Error in loginUser: $error');
@@ -76,52 +77,56 @@ Future<List<User>> getUsers() async {
   try {
     final response = await http.get(
       Uri.parse('$apiUrl/api.php?table=users&action=all'),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => User.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to fetch users');
+      throw Exception('Failed to fetch users: ${response.body}');
     }
   } catch (error) {
     print('Error in getUsers: $error');
-    throw Exception('Failed to fetch users');
+    throw Exception('Failed to fetch users: $error');
   }
 }
 
 Future<void> addUser(User user, String password) async {
   try {
     final response = await http.post(
-      Uri.parse('$apiUrl/api.php?table=users'),
-      body: {
+      Uri.parse('$apiUrl/api.php?table=users&action=add'),
+      body: jsonEncode({
         'code': user.code,
         'username': user.username,
         'department': user.department,
         'division': user.division,
         'role': user.role,
         'password': password,
-      },
+      }),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode != 200) {
-      throw Exception('Failed to add user');
+      throw Exception('Failed to add user: ${response.body}');
     }
   } catch (error) {
     print('Error in addUser: $error');
-    throw Exception('Failed to add user');
+    throw Exception('Failed to add user: $error');
   }
 }
 
 Future<void> deleteUser(String code) async {
   try {
     final response = await http.delete(
-      Uri.parse('$apiUrl/api.php?table=users&code=$code'),
+      Uri.parse('$apiUrl/api.php?table=users&action=delete'),
+      body: jsonEncode({'code': code}),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete user');
+      throw Exception('Failed to delete user: ${response.body}');
     }
   } catch (error) {
     print('Error in deleteUser: $error');
-    throw Exception('Failed to delete user');
+    throw Exception('Failed to delete user: $error');
   }
 }
 
@@ -157,74 +162,55 @@ class Content {
 Future<List<Content>> getContent(String department, String division) async {
   try {
     final response = await http.get(
-      Uri.parse('$apiUrl/api.php?table=content&action=all&department=$department&division=$division'),
+      Uri.parse('$apiUrl/api.php?table=content&department=$department&division=$division'),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Content.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to fetch content');
+      throw Exception('Failed to fetch content: ${response.body}');
     }
   } catch (error) {
     print('Error in getContent: $error');
-    throw Exception('Failed to fetch content');
+    throw Exception('Failed to fetch content: $error');
   }
 }
 
-Future<void> uploadContent(
-    String title, PlatformFile file, String uploadedBy, String department, String division) async {
-  if (kIsWeb) {
-    throw Exception('File upload is not supported on web.');
-  }
+Future<void> uploadContent(String title, PlatformFile file, String uploadedBy, String department, String division) async {
   try {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$apiUrl/upload.php'),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath('file', file.path!),
-    );
+    var request = http.MultipartRequest('POST', Uri.parse('$apiUrl/upload.php'));
+    request.fields['data'] = jsonEncode({
+      'title': title,
+      'uploaded_by': uploadedBy,
+      'department': department,
+      'division': division,
+    });
+    request.files.add(await http.MultipartFile.fromPath('file', file.path!));
     final response = await request.send();
-    final responseData = await http.Response.fromStream(response);
-    if (response.statusCode == 200) {
-      final filePath = jsonDecode(responseData.body)['file_path'] as String;
-      final fileType = file.extension ?? '';
-      final uploadDate = DateTime.now().toIso8601String();
-      final id = DateTime.now().millisecondsSinceEpoch.toString();
-      await http.post(
-        Uri.parse('$apiUrl/api.php?table=content'),
-        body: {
-          'id': id,
-          'title': title,
-          'file_path': filePath,
-          'file_type': fileType,
-          'uploaded_by': uploadedBy,
-          'upload_date': uploadDate,
-          'department': department,
-          'division': division,
-        },
-      );
-      scheduleNotification('محتوى جديد', 'تم رفع محتوى جديد: $title');
-    } else {
-      throw Exception('Failed to upload content');
+    final responseBody = await response.stream.bytesToString();
+    if (response.statusCode != 200) {
+      throw Exception('Failed to upload content: $responseBody');
     }
   } catch (error) {
     print('Error in uploadContent: $error');
-    throw Exception('Failed to upload content');
+    throw Exception('Failed to upload content: $error');
   }
 }
 
 Future<void> deleteContent(String id) async {
   try {
     final response = await http.delete(
-      Uri.parse('$apiUrl/api.php?table=content&id=$id'),
+      Uri.parse('$apiUrl/api.php?table=content'),
+      body: jsonEncode({'id': id}),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete content');
+      throw Exception('Failed to delete content: ${response.body}');
     }
   } catch (error) {
     print('Error in deleteContent: $error');
-    throw Exception('Failed to delete content');
+    throw Exception('Failed to delete content: $error');
   }
 }
 
@@ -255,43 +241,44 @@ Future<List<Message>> getChatMessages(String department, String division) async 
   try {
     final response = await http.get(
       Uri.parse('$apiUrl/api.php?table=messages&department=$department&division=$division'),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Message.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to fetch messages');
+      throw Exception('Failed to fetch messages: ${response.body}');
     }
   } catch (error) {
     print('Error in getChatMessages: $error');
-    throw Exception('Failed to fetch messages');
+    throw Exception('Failed to fetch messages: $error');
   }
 }
 
-Future<void> sendMessage(
-    String senderId, String department, String division, String content) async {
+Future<void> sendMessage(String senderId, String department, String division, String content) async {
   try {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final timestamp = DateTime.now().toIso8601String();
     final response = await http.post(
       Uri.parse('$apiUrl/api.php?table=messages'),
-      body: {
+      body: jsonEncode({
         'id': id,
         'content': content,
         'sender_id': senderId,
         'department': department,
         'division': division,
         'timestamp': timestamp,
-      },
+      }),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       scheduleNotification('رسالة جديدة', 'رسالة جديدة في الشات: ${content.substring(0, 50)}...');
     } else {
-      throw Exception('Failed to send message');
+      throw Exception('Failed to send message: ${response.body}');
     }
   } catch (error) {
     print('Error in sendMessage: $error');
-    throw Exception('Failed to send message');
+    throw Exception('Failed to send message: $error');
   }
 }
 
@@ -319,16 +306,15 @@ Future<Result> getResults(String studentId) async {
   try {
     final response = await http.get(
       Uri.parse('$apiUrl/api.php?table=results&studentId=$studentId'),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       return Result.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Failed to fetch results');
+      throw Exception('Failed to fetch results: ${response.body}');
     }
   } catch (error) {
     print('Error in getResults: $error');
-    throw Exception('Failed to fetch results');
+    throw Exception('Failed to fetch results: $error');
   }
 }
-
-
