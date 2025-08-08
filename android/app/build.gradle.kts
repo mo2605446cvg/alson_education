@@ -1,42 +1,39 @@
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
+    id 'com.android.application'
+    id 'kotlin-android'
 }
 
 android {
-    namespace = "com.example.alson_education"
-    compileSdk = flutter.compileSdkVersion.toInt()
-    ndkVersion = flutter.ndkVersion
+    namespace "com.example.alson_education"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.alson_education"
+        minSdk 21
+        targetSdk 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+    }
 
     compileOptions {
-        // متوافق مع Java 22
-        sourceCompatibility = JavaVersion.VERSION_22
-        targetCompatibility = JavaVersion.VERSION_22
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_22.toString()
-    }
-
-    defaultConfig {
-        applicationId = "com.example.alson_education"
-        minSdk = flutter.minSdkVersion.toInt()
-        targetSdk = flutter.targetSdkVersion.toInt()
-
-        // تعديل لحل مشكلة "Function invocation expected"
-        versionCode.set(flutter.versionCode.toInt())
-        versionName.set(flutter.versionName)
+        jvmTarget = "17"
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
         }
     }
 }
 
-flutter {
-    source = "../.."
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
