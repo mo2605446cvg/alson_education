@@ -79,6 +79,7 @@ Future<List<User>> getUsers() async {
       Uri.parse('$apiUrl/api.php?table=users&action=all'),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Get Users Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => User.fromJson(json)).toList();
@@ -105,6 +106,7 @@ Future<void> addUser(User user, String password) async {
       }),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Add User Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode != 200) {
       throw Exception('Failed to add user: ${response.body}');
     }
@@ -121,6 +123,7 @@ Future<void> deleteUser(String code) async {
       body: jsonEncode({'code': code}),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Delete User Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode != 200) {
       throw Exception('Failed to delete user: ${response.body}');
     }
@@ -165,6 +168,7 @@ Future<List<Content>> getContent(String department, String division) async {
       Uri.parse('$apiUrl/api.php?table=content&department=$department&division=$division'),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Get Content Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Content.fromJson(json)).toList();
@@ -186,9 +190,14 @@ Future<void> uploadContent(String title, PlatformFile file, String uploadedBy, S
       'department': department,
       'division': division,
     });
-    request.files.add(await http.MultipartFile.fromPath('file', file.path!));
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      file.bytes!,
+      filename: file.name,
+    ));
     final response = await request.send();
     final responseBody = await response.stream.bytesToString();
+    print('Upload Content Response: ${response.statusCode} - $responseBody');
     if (response.statusCode != 200) {
       throw Exception('Failed to upload content: $responseBody');
     }
@@ -205,6 +214,7 @@ Future<void> deleteContent(String id) async {
       body: jsonEncode({'id': id}),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Delete Content Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode != 200) {
       throw Exception('Failed to delete content: ${response.body}');
     }
@@ -243,6 +253,7 @@ Future<List<Message>> getChatMessages(String department, String division) async 
       Uri.parse('$apiUrl/api.php?table=messages&department=$department&division=$division'),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Get Messages Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Message.fromJson(json)).toList();
@@ -271,6 +282,7 @@ Future<void> sendMessage(String senderId, String department, String division, St
       }),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Send Message Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
       scheduleNotification('رسالة جديدة', 'رسالة جديدة في الشات: ${content.substring(0, 50)}...');
     } else {
@@ -308,6 +320,7 @@ Future<Result> getResults(String studentId) async {
       Uri.parse('$apiUrl/api.php?table=results&studentId=$studentId'),
       headers: {'Content-Type': 'application/json'},
     );
+    print('Get Results Response: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200) {
       return Result.fromJson(jsonDecode(response.body));
     } else {
