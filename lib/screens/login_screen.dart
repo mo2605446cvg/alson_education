@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacementNamed(context, '/content');
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل تسجيل الدخول: $error')),
+        SnackBar(content: Text('فشل تسجيل الدخول: تأكد من الاتصال بالإنترنت أو البيانات')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/iogo.png', height: 100),
+                Image.asset('assets/icon.png', height: 100),
                 const SizedBox(height: 16),
                 const Text(
                   'تسجيل الدخول',
