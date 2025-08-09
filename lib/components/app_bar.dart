@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:alson_education/utils/colors.dart';
+import 'package:alson_education/providers/user_provider.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final bool isAdmin;
