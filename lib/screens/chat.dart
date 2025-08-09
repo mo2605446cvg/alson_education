@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:alson_education/components/app_bar.dart';
 import 'package:alson_education/providers/user_provider.dart';
 import 'package:alson_education/utils/api.dart';
-import 'package:alson_education/models/message.dart';
 import 'package:alson_education/utils/colors.dart';
+import 'dart:async';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -17,11 +17,22 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   List<Message> _messages = [];
   bool _isLoading = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchMessages();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) _fetchMessages();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _messageController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchMessages() async {
@@ -32,7 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages = data);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في جلب الرسائل: $error')),
+        const SnackBar(content: Text('فشل في جلب الرسائل: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -40,16 +51,24 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty) return;
+    if (_messageController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى إدخال رسالة')),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final user = Provider.of<UserProvider>(context, listen: false).user!;
       await sendMessage(user.code, user.department, user.division, _messageController.text);
       _messageController.clear();
-      _fetchMessages();
+      await _fetchMessages();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إرسال الرسالة بنجاح')),
+      );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في إرسال الرسالة: $error')),
+        const SnackBar(content: Text('فشل في إرسال الرسالة: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -76,6 +95,15 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
+          ElevatedButton(
+            onPressed: _fetchMessages,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('تحديث الرسائل', style: TextStyle(color: Colors.white, fontFamily: 'Cairo')),
+          ),
+          const SizedBox(height: 16),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -154,11 +182,5 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
   }
 }
