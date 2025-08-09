@@ -21,8 +21,12 @@ class _ContentUploadState extends State<ContentUpload> {
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles();
-    if (result != null) {
+    if (result != null && result.files.single.path != null) {
       setState(() => _selectedFile = File(result.files.single.path!));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل في اختيار الملف')),
+      );
     }
   }
 
@@ -52,7 +56,7 @@ class _ContentUploadState extends State<ContentUpload> {
       Navigator.pushReplacementNamed(context, '/content');
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في رفع المحتوى: $error')),
+        const SnackBar(content: Text('فشل في رفع المحتوى: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
