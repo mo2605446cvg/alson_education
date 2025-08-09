@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:alson_education/components/app_bar.dart';
 import 'package:alson_education/providers/user_provider.dart';
-import 'package:alson_education/models/content.dart';
 import 'package:alson_education/utils/api.dart';
 import 'package:alson_education/utils/colors.dart';
 
@@ -32,7 +31,7 @@ class _ContentListState extends State<ContentList> {
       setState(() => _content = data);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في جلب المحتوى: $error')),
+        const SnackBar(content: Text('فشل في جلب المحتوى: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -55,13 +54,13 @@ class _ContentListState extends State<ContentList> {
               setState(() => _isLoading = true);
               try {
                 await deleteContent(id);
-                _fetchContent();
+                await _fetchContent();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('تم حذف المحتوى بنجاح')),
                 );
               } catch (error) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('فشل في حذف المحتوى: $error')),
+                  const SnackBar(content: Text('فشل في حذف المحتوى: تأكد من الاتصال بالإنترنت')),
                 );
               } finally {
                 setState(() => _isLoading = false);
@@ -93,6 +92,15 @@ class _ContentListState extends State<ContentList> {
                 color: primaryColor,
                 fontFamily: 'Cairo',
               ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchContent,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text('تحديث المحتوى', style: TextStyle(color: Colors.white, fontFamily: 'Cairo')),
             ),
             const SizedBox(height: 16),
             Expanded(
