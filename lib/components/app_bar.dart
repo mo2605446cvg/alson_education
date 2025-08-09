@@ -36,7 +36,10 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ),
         IconButton(
           icon: const Icon(Icons.logout),
-          onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+          onPressed: () {
+            Provider.of<UserProvider>(context, listen: false).clearUser();
+            Navigator.pushReplacementNamed(context, '/login');
+          },
           tooltip: 'تسجيل الخروج',
         ),
       ],
