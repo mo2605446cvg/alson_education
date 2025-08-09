@@ -30,7 +30,7 @@ class _UserManagementState extends State<UserManagement> {
       setState(() => _users = data);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في جلب المستخدمين: $error')),
+        const SnackBar(content: Text('فشل في جلب المستخدمين: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -48,13 +48,13 @@ class _UserManagementState extends State<UserManagement> {
         role: role,
       );
       await addUser(newUser, password);
-      _fetchUsers();
+      await _fetchUsers();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم إضافة المستخدم بنجاح')),
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في إضافة المستخدم: $error')),
+        const SnackBar(content: Text('فشل في إضافة المستخدم: تأكد من الاتصال بالإنترنت')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -77,13 +77,13 @@ class _UserManagementState extends State<UserManagement> {
               setState(() => _isLoading = true);
               try {
                 await deleteUser(code);
-                _fetchUsers();
+                await _fetchUsers();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('تم حذف المستخدم بنجاح')),
                 );
               } catch (error) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('فشل في حذف المستخدم: $error')),
+                  const SnackBar(content: Text('فشل في حذف المستخدم: تأكد من الاتصال بالإنترنت')),
                 );
               } finally {
                 setState(() => _isLoading = false);
@@ -200,6 +200,15 @@ class _UserManagementState extends State<UserManagement> {
                 color: primaryColor,
                 fontFamily: 'Cairo',
               ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchUsers,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text('تحديث المستخدمين', style: TextStyle(color: Colors.white, fontFamily: 'Cairo')),
             ),
             const SizedBox(height: 16),
             Expanded(
