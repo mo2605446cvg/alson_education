@@ -8,6 +8,7 @@ import 'package:alson_education/models/content.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:alson_education/screens/image_viewer_screen.dart';
 import 'package:alson_education/screens/text_viewer_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContentList extends StatefulWidget {
   const ContentList({super.key});
@@ -172,14 +173,16 @@ class _ContentListState extends State<ContentList> {
                                       children: [
                                         IconButton(
                                           icon: const Icon(Icons.visibility, color: primaryColor),
-                                          onPressed: () {
+                                          onPressed: () async {
                                             final url = 'https://ki74.alalsunacademy.com/${content.filePath}';
                                             if (content.fileType == 'pdf') {
-                                              Navigator.push(
-                                                context,
-                                                
-                                                ),
-                                              );
+                                              if (await canLaunchUrl(Uri.parse(url))) {
+                                                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('لا يمكن فتح الملف')),
+                                                );
+                                              }
                                             } else if (['jpg', 'png', 'jpeg'].contains(content.fileType)) {
                                               Navigator.push(
                                                 context,
