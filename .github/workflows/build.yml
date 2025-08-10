@@ -27,10 +27,7 @@ jobs:
           rm -rf $ANDROID_HOME/build-tools/*
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.0"
-      
-      - name: Update Gradle Wrapper
-        run: |
-          ./android/gradlew wrapper --gradle-version 8.1 --distribution-type bin
+          
       - name: Get Flutter Dependencies
         run: flutter pub get
       - name: Clean Flutter Project
