@@ -1,1 +1,44 @@
+name: Flutter CI
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+          cache: true
+      - name: Install Android SDK
+        run: |
+          rm -rf $ANDROID_HOME/platforms/android-*
+          rm -rf $ANDROID_HOME/build-tools/*
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.0"
+      -
+      - name: Update Gradle Wrapper
+        run: |
+          ./android/gradlew wrapper --gradle-version 8.1 --distribution-type bin
+      - name: Get Flutter Dependencies
+        run: flutter pub get
+      - name: Clean Flutter Project
+        run: flutter clean
+      - name: Build APK
+        run: flutter build apk --release --no-tree-shake-icons
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
