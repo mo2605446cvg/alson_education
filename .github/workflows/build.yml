@@ -34,12 +34,6 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      # الخطوة 5: تنظيف ذاكرة التخزين المؤقت لـ Gradle
-      - name: Clean Gradle Cache
-        run: |
-          rm -rf ~/.gradle/caches/
-          ./android/gradlew cleanBuildCache
-
       # الخطوة 6: تثبيت التبعيات
       - name: Get Flutter Dependencies
         run: flutter pub get
