@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "18743041280",
+    "project_id": "alsoneducation-e5a04",
+    "storage_bucket": "alsoneducation-e5a04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:18743041280:android:c686a13f8f3bcbac3567e5",
+        "android_client_info": {
+          "package_name": "com.example.alson_education"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiv4xGVi9GPXnsqAyx8KXqqsj1tSrluOw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
