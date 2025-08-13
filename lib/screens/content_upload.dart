@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:alson_education/models/content.dart';
+import 'package:alson_education/components/app_bar.dart';
 import 'package:alson_education/providers/user_provider.dart';
 import 'package:alson_education/utils/api.dart';
 import 'package:alson_education/utils/colors.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 class ContentUpload extends StatefulWidget {
   const ContentUpload({super.key});
@@ -17,33 +17,24 @@ class ContentUpload extends StatefulWidget {
 class _ContentUploadState extends State<ContentUpload> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String? _filePath;
-  String? _fileType;
+  File? _selectedFile;
   bool _isLoading = false;
 
   Future<void> _pickFile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'png', 'jpeg', 'pdf', 'txt'],
-      );
-      if (result != null) {
-        setState(() {
-          _filePath = result.files.single.path;
-          _fileType = result.files.single.extension;
-        });
-      }
-    } catch (e) {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null && result.files.single.path != null) {
+      setState(() => _selectedFile = File(result.files.single.path!));
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في اختيار الملف: $e', style: const TextStyle(fontFamily: 'Cairo'))),
+        const SnackBar(content: Text('فشل في اختيار الملف')),
       );
     }
   }
 
   Future<void> _uploadContent() async {
-    if (_titleController.text.isEmpty || _filePath == null) {
+    if (_titleController.text.trim().isEmpty || _selectedFile == null || _descriptionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال العنوان واختيار ملف', style: TextStyle(fontFamily: 'Cairo'))),
+        const SnackBar(content: Text('يرجى إدخال العنوان، النبذة، واختيار ملف')),
       );
       return;
     }
@@ -51,23 +42,24 @@ class _ContentUploadState extends State<ContentUpload> {
     setState(() => _isLoading = true);
     try {
       final user = Provider.of<UserProvider>(context, listen: false).user!;
-      final content = Content(
-        id: '',
-        title: _titleController.text,
-        description: _descriptionController.text,
-        fileType: _fileType ?? '',
-        filePath: '',
-        uploadedBy: user.code,
-        uploadDate: DateTime.now().toIso8601String(),
+      await uploadContent(
+        _titleController.text,
+        _selectedFile!,
+        user.code,
+        user.department,
+        user.division,
+        _descriptionController.text,
       );
-      await uploadContent(content, _filePath!);
+      _titleController.clear();
+      _descriptionController.clear();
+      setState(() => _selectedFile = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم رفع المحتوى بنجاح', style: TextStyle(fontFamily: 'Cairo'))),
+        const SnackBar(content: Text('تم رفع المحتوى بنجاح')),
       );
-      Navigator.pop(context);
-    } catch (e) {
+      Navigator.pushReplacementNamed(context, '/content');
+    } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في رفع المحتوى: $e', style: const TextStyle(fontFamily: 'Cairo'))),
+        SnackBar(content: Text('فشل في رفع المحتوى: $error')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -76,55 +68,100 @@ class _ContentUploadState extends State<ContentUpload> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user!;
+    if (user.role != 'admin') {
+      return Scaffold(
+        appBar: AppBarWidget(isAdmin: false),
+        body: const Center(
+          child: Text(
+            'غير مصرح لك برفع المحتوى',
+            style: TextStyle(fontFamily: 'Cairo', fontSize: 18, color: textColor),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('رفع محتوى', style: TextStyle(fontFamily: 'Cairo')),
-      ),
+      appBar: AppBarWidget(isAdmin: true),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'العنوان',
-                  hintStyle: TextStyle(fontFamily: 'Cairo'),
+              const Text(
+                'رفع محتوى',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                  fontFamily: 'Cairo',
                 ),
-                style: const TextStyle(fontFamily: 'Cairo'),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'النبذة',
-                  hintStyle: TextStyle(fontFamily: 'Cairo'),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 3)],
                 ),
-                style: const TextStyle(fontFamily: 'Cairo'),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickFile,
-                child: const Text('اختيار ملف', style: TextStyle(fontFamily: 'Cairo')),
-              ),
-              if (_filePath != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text('الملف المختار: $_fileType', style: const TextStyle(fontFamily: 'Cairo')),
-                ),
-              const SizedBox(height: 16),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _uploadContent,
-                      child: const Text('رفع', style: TextStyle(fontFamily: 'Cairo')),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        hintText: 'عنوان المحتوى',
+                        hintStyle: TextStyle(fontFamily: 'Cairo'),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _descriptionController,
+                      decoration: const InputDecoration(
+                        hintText: 'نبذة عن المحتوى',
+                        hintStyle: TextStyle(fontFamily: 'Cairo'),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _pickFile,
+                      child: const Text('اختيار ملف', style: TextStyle(fontFamily: 'Cairo')),
+                    ),
+                    if (_selectedFile != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'الملف المختار: ${_selectedFile!.path.split('/').last}',
+                        style: const TextStyle(color: textColor, fontFamily: 'Cairo'),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _uploadContent,
+                      child: Text(
+                        _isLoading ? 'جارٍ الرفع...' : 'رفع المحتوى',
+                        style: const TextStyle(fontFamily: 'Cairo'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 }
