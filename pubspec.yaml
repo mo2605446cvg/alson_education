@@ -1,5 +1,6 @@
-name: alalsun_academy
-description: أكاديمية الألسن - تطبيق إدارة المحتوى والشات
+# pubspec.yaml
+name: alson_education
+description: A new Flutter project.
 
 publish_to: 'none'
 
@@ -28,4 +29,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon.png
-    
