@@ -36,14 +36,6 @@ class AlalsunApp extends StatelessWidget {
         scaffoldBackgroundColor: Color(0xFF121B22),
         cardColor: Color(0xFF1F2C34),
       ),
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        Locale('ar', 'AE'),
-      ],
       home: LoginScreen(apiService: apiService),
     );
   }
