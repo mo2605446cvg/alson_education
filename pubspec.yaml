@@ -12,18 +12,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.5
+  http: ^1.1.0
   shared_preferences: ^2.2.2
   url_launcher: ^6.1.11
   file_picker: ^5.5.0
   intl: ^0.19.0
-  flutter_localizations:
-    sdk: flutter
+  geolocator: ^11.0.1
+  device_info_plus: ^10.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+
 
 flutter:
   uses-material-design: true
@@ -36,5 +37,4 @@ flutter:
       fonts:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
-
           weight: 700
