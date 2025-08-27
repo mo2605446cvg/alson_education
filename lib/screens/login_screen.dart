@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final ApiService apiService;
-  final Function(User) onLogin;
-  final Function() onLoginAsGuest; // إضافة دالة تسجيل الدخول كضيف
+  final Function(app_user.AppUser) onLogin;
+  final Function() onLoginAsGuest;
 
   LoginScreen({required this.apiService, required this.onLogin, required this.onLoginAsGuest});
 
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString('user');
     if (userData != null) {
-      final user = User.fromJson(json.decode(userData));
+      final user = app_user.AppUser.fromJson(json.decode(userData));
       widget.onLogin(user);
     }
   }
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 20),
                     TextButton(
-                      onPressed: widget.onLoginAsGuest, // استخدام دالة تسجيل الدخول كضيف
+                      onPressed: widget.onLoginAsGuest,
                       child: Text("تسجيل الدخول كضيف"),
                     ),
                     SizedBox(height: 10),

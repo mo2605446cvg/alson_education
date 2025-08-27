@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/screens/content_screen.dart';
 import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/upload_screen.dart';
@@ -8,7 +8,7 @@ import 'package:alson_education/screens/users_screen.dart';
 import 'package:alson_education/screens/admin_dashboard.dart';
 
 class HomeScreen extends StatefulWidget {
-  final User user;
+  final app_user.AppUser user;
   final ApiService apiService;
   final Function() onLogout;
 

@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 
 class UploadScreen extends StatefulWidget {
   final ApiService apiService;
-  final User user;
+  final app_user.AppUser user;
 
   UploadScreen({required this.apiService, required this.user});
 
@@ -68,7 +68,6 @@ class _UploadScreenState extends State<UploadScreen> {
           SnackBar(content: Text('تم رفع المحتوى بنجاح')),
         );
         
-        // مسح الحقول
         _titleController.clear();
         _descriptionController.clear();
         setState(() {
@@ -122,7 +121,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 16),
-                  TextField(
+                    TextField(
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: 'نبذة عن المحتوى',

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 
 class AdminDashboard extends StatefulWidget {
-  final User user;
+  final app_user.AppUser user;
   final ApiService apiService;
   final Function() onLogout;
 
@@ -29,13 +29,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadDashboardData() async {
     try {
-      // جلب عدد المستخدمين
       final users = await widget.apiService.getUsers();
       
-      // جلب الموقع
       await _getCurrentLocation();
       
-      // جلب معلومات الجهاز
       await _getDeviceInfo();
 
       setState(() {
@@ -209,8 +206,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             children: [
                               ElevatedButton(
                                 onPressed: () {
-                                  // الانتقال إلى إدارة المستخدمين
-                                  Navigator.pop(context); // العودة للشاشة الرئيسية
+                                  Navigator.pop(context);
                                 },
                                 child: Text('العودة للرئيسية'),
                               ),

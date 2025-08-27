@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/models/message.dart';
 
 class ChatScreen extends StatefulWidget {
   final ApiService apiService;
-  final User user;
+  final app_user.AppUser user;
 
   ChatScreen({required this.apiService, required this.user});
 
@@ -116,7 +116,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (confirmed == true) {
       try {
-        // هنا سيتم تنفيذ دالة حذف الرسالة من السيرفر
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('تم حذف الرسالة بنجاح')),
         );

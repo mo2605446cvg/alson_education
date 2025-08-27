@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 
 class UsersScreen extends StatefulWidget {
   final ApiService apiService;
@@ -12,7 +12,7 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  List<User> _users = [];
+  List<app_user.AppUser> _users = [];
   final Map<String, TextEditingController> _fieldControllers = {
     'code': TextEditingController(),
     'username': TextEditingController(),
@@ -22,7 +22,7 @@ class _UsersScreenState extends State<UsersScreen> {
     'password': TextEditingController(),
   };
   bool _isLoading = false;
-  bool _showAddUserForm = false; // التحكم في إظهار نموذج إضافة المستخدم
+  bool _showAddUserForm = false;
 
   @override
   void initState() {
@@ -67,7 +67,6 @@ class _UsersScreenState extends State<UsersScreen> {
           SnackBar(content: Text('تم إضافة المستخدم بنجاح')),
         );
         
-        // مسح الحقول وإخفاء النموذج
         _fieldControllers.values.forEach((controller) => controller.clear());
         setState(() => _showAddUserForm = false);
         _loadUsers();
@@ -79,7 +78,7 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
-  Future<void> _deleteUser(User user) async {
+  Future<void> _deleteUser(app_user.AppUser user) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 
 class GuestScreen extends StatelessWidget {
-  final User user;
+  final app_user.AppUser user;
   final Function() onLogout;
 
   GuestScreen({required this.user, required this.onLogout});

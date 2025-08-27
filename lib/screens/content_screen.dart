@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/screens/image_viewer_screen.dart';
 import 'package:alson_education/screens/text_viewer_screen.dart';
 
 class ContentScreen extends StatefulWidget {
   final ApiService apiService;
-  final User user;
+  final app_user.AppUser user;
 
   ContentScreen({required this.apiService, required this.user});
 
@@ -44,7 +44,7 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   void _viewContent(Content item) {
-    final url = 'https://ki74.alalsunacademy.com/${item.filePath}';
+    final url = item.filePath;
     
     if (item.fileType == 'pdf') {
       // فتح PDF في المتصفح
