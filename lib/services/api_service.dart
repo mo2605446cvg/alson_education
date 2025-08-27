@@ -1,14 +1,14 @@
 // ملف: api_service.dart
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/models/message.dart';
 
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  Future<User?> login(String code, String password) async {
+  Future<app_user.AppUser?> login(String code, String password) async {
     try {
       final response = await supabase
           .from('users')
@@ -19,7 +19,7 @@ class ApiService {
           .timeout(Duration(seconds: 10));
 
       if (response != null) {
-        return User.fromJson(response);
+        return app_user.AppUser.fromJson(response);
       } else {
         throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
       }
@@ -154,14 +154,14 @@ class ApiService {
     }
   }
 
-  Future<List<User>> getUsers() async {
+  Future<List<app_user.AppUser>> getUsers() async {
     try {
       final response = await supabase
           .from('users')
           .select()
           .timeout(Duration(seconds: 10));
 
-      return (response as List).map((item) => User.fromJson(item)).toList();
+      return (response as List).map((item) => app_user.AppUser.fromJson(item)).toList();
     } catch (e) {
       throw Exception('فشل في جلب المستخدمين: $e');
     }
