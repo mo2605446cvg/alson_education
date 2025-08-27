@@ -29,7 +29,7 @@ class ApiService {
 
   Future<List<Content>> getContent(String department, String division) async {
     try {
-      PostgrestFilterBuilder query;
+      dynamic query;
       
       if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
         query = supabase
@@ -117,7 +117,7 @@ class ApiService {
 
   Future<List<Message>> getChatMessages(String department, String division) async {
     try {
-      PostgrestFilterBuilder query;
+      dynamic query;
       
       if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
         query = supabase
