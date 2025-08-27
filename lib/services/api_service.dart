@@ -1,4 +1,3 @@
-// ملف: api_service.dart
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alson_education/models/user.dart' as app_user;
@@ -13,8 +12,8 @@ class ApiService {
       final response = await supabase
           .from('users')
           .select()
-          .eq('code', code)
-          .eq('password', password)
+          .filter('code', 'eq', code)
+          .filter('password', 'eq', password)
           .single()
           .timeout(Duration(seconds: 10));
 
@@ -33,11 +32,11 @@ class ApiService {
       var query = supabase.from('content').select();
       
       if (department.isNotEmpty && department != 'guest') {
-        query = query.eq('department', department);
+        query = query.filter('department', 'eq', department);
       }
       
       if (division.isNotEmpty && division != 'guest') {
-        query = query.eq('division', division);
+        query = query.filter('division', 'eq', division);
       }
 
       final response = await query.timeout(Duration(seconds: 10));
@@ -94,7 +93,7 @@ class ApiService {
       await supabase
           .from('content')
           .delete()
-          .eq('id', id);
+          .filter('id', 'eq', id);
       
       return true;
     } catch (e) {
@@ -110,11 +109,11 @@ class ApiService {
           .order('timestamp', ascending: true);
 
       if (department.isNotEmpty && department != 'guest') {
-        query = query.eq('department', department);
+        query = query.filter('department', 'eq', department);
       }
       
       if (division.isNotEmpty && division != 'guest') {
-        query = query.eq('division', division);
+        query = query.filter('division', 'eq', division);
       }
 
       final response = await query.timeout(Duration(seconds: 10));
@@ -196,7 +195,7 @@ class ApiService {
       await supabase
           .from('users')
           .delete()
-          .eq('code', code);
+          .filter('code', 'eq', code);
       
       return true;
     } catch (e) {
