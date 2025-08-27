@@ -12,8 +12,8 @@ class ApiService {
       final response = await supabase
           .from('users')
           .select()
-          .filter('code', 'eq', code)
-          .filter('password', 'eq', password)
+          .eq('code', code)
+          .eq('password', password)
           .single()
           .timeout(Duration(seconds: 10));
 
@@ -29,14 +29,28 @@ class ApiService {
 
   Future<List<Content>> getContent(String department, String division) async {
     try {
-      var query = supabase.from('content').select();
+      PostgrestFilterBuilder query;
       
-      if (department.isNotEmpty && department != 'guest') {
-        query = query.filter('department', 'eq', department);
-      }
-      
-      if (division.isNotEmpty && division != 'guest') {
-        query = query.filter('division', 'eq', division);
+      if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
+        query = supabase
+            .from('content')
+            .select()
+            .eq('department', department)
+            .eq('division', division);
+      } else if (department.isNotEmpty && department != 'guest') {
+        query = supabase
+            .from('content')
+            .select()
+            .eq('department', department);
+      } else if (division.isNotEmpty && division != 'guest') {
+        query = supabase
+            .from('content')
+            .select()
+            .eq('division', division);
+      } else {
+        query = supabase
+            .from('content')
+            .select();
       }
 
       final response = await query.timeout(Duration(seconds: 10));
@@ -93,7 +107,7 @@ class ApiService {
       await supabase
           .from('content')
           .delete()
-          .filter('id', 'eq', id);
+          .eq('id', id);
       
       return true;
     } catch (e) {
@@ -103,17 +117,32 @@ class ApiService {
 
   Future<List<Message>> getChatMessages(String department, String division) async {
     try {
-      var query = supabase
-          .from('messages')
-          .select('*, users(username)')
-          .order('timestamp', ascending: true);
-
-      if (department.isNotEmpty && department != 'guest') {
-        query = query.filter('department', 'eq', department);
-      }
+      PostgrestFilterBuilder query;
       
-      if (division.isNotEmpty && division != 'guest') {
-        query = query.filter('division', 'eq', division);
+      if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
+        query = supabase
+            .from('messages')
+            .select('*, users(username)')
+            .eq('department', department)
+            .eq('division', division)
+            .order('timestamp', ascending: true);
+      } else if (department.isNotEmpty && department != 'guest') {
+        query = supabase
+            .from('messages')
+            .select('*, users(username)')
+            .eq('department', department)
+            .order('timestamp', ascending: true);
+      } else if (division.isNotEmpty && division != 'guest') {
+        query = supabase
+            .from('messages')
+            .select('*, users(username)')
+            .eq('division', division)
+            .order('timestamp', ascending: true);
+      } else {
+        query = supabase
+            .from('messages')
+            .select('*, users(username)')
+            .order('timestamp', ascending: true);
       }
 
       final response = await query.timeout(Duration(seconds: 10));
@@ -195,7 +224,7 @@ class ApiService {
       await supabase
           .from('users')
           .delete()
-          .filter('code', 'eq', code);
+          .eq('code', code);
       
       return true;
     } catch (e) {
