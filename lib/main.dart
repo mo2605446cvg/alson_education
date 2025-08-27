@@ -8,7 +8,7 @@ import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/guest_screen.dart';
 import 'package:alson_education/screens/admin_dashboard.dart';
 import 'package:alson_education/services/api_service.dart';
-import 'package:alson_education/models/user.dart';
+import 'package:alson_education/models/user.dart' as app_user;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class AlalsunApp extends StatefulWidget {
 
 class _AlalsunAppState extends State<AlalsunApp> {
   final ApiService apiService = ApiService();
-  User? currentUser;
+  app_user.AppUser? currentUser;
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
     final userData = prefs.getString('user');
     if (userData != null) {
       setState(() {
-        currentUser = User.fromJson(json.decode(userData));
+        currentUser = app_user.AppUser.fromJson(json.decode(userData));
       });
     }
   }
@@ -54,7 +54,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
     });
   }
 
-  void _login(User user) async {
+  void _login(app_user.AppUser user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', json.encode(user.toJson()));
     setState(() {
@@ -63,7 +63,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
   }
 
   void _loginAsGuest() async {
-    final guestUser = User(
+    final guestUser = app_user.AppUser(
       code: 'guest',
       username: 'ضيف',
       department: '',
