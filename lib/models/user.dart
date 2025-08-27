@@ -1,11 +1,12 @@
-class User {
+// ملف: user.dart
+class AppUser {
   final String code;
   final String username;
   final String department;
   final String division;
   final String role;
 
-  User({
+  AppUser({
     required this.code,
     required this.username,
     required this.department,
@@ -13,13 +14,13 @@ class User {
     required this.role,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
       code: json['code'] ?? '',
       username: json['username'] ?? '',
       department: json['department'] ?? '',
       division: json['division'] ?? '',
-      role: json['role'] ?? 'guest', // جعل الضيف هو القيمة الافتراضية
+      role: json['role'] ?? 'guest',
     );
   }
 
