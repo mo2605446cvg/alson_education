@@ -51,6 +51,14 @@ class _UploadScreenState extends State<UploadScreen> {
       return;
     }
 
+    // التحقق من الاتصال أولاً
+    if (!await widget.apiService.checkConnection()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل في الاتصال بالسيرفر')),
+      );
+      return;
+    }
+
     setState(() => _isUploading = true);
 
     try {
@@ -121,7 +129,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 16),
-                    TextField(
+                  TextField(
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: 'نبذة عن المحتوى',
