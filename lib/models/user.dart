@@ -1,4 +1,3 @@
-// ملف: user.dart
 class AppUser {
   final String code;
   final String username;
