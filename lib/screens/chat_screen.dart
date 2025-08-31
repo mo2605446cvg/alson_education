@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في جلب الرسائل')),
+        SnackBar(content: Text('فشل في جلب الرسائل: $e')),
       );
     }
   }
@@ -65,6 +65,14 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     if (_messageController.text.isEmpty) return;
 
+    // التحقق من الاتصال أولاً
+    if (!await widget.apiService.checkConnection()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل في الاتصال بالسيرفر')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -81,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في إرسال الرسالة')),
+        SnackBar(content: Text('فشل في إرسال الرسالة: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -116,6 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (confirmed == true) {
       try {
+        // هنا سيتم تنفيذ دالة حذف الرسالة من السيرفر
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('تم حذف الرسالة بنجاح')),
         );
