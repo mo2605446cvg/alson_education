@@ -10,8 +10,8 @@ class ApiService {
   // دالة للتحقق من الاتصال
   Future<bool> checkConnection() async {
     try {
-      final response = await supabase.from('users').select('count').limit(1);
-      return true; // إذا وصلنا هنا بدون error فالطلب نجح
+      await supabase.from('users').select('count').limit(1);
+      return true;
     } catch (e) {
       print('Connection error: $e');
       return false;
@@ -99,7 +99,7 @@ class ApiService {
       // رفع الملف إلى Supabase Storage
       await supabase.storage
           .from('content')
-          .upload(fileName, file, fileOptions: FileOptions(upsert: true));
+          .upload(fileName, file);
 
       // الحصول على رابط الملف العام
       final fileUrl = supabase.storage
@@ -152,39 +152,19 @@ class ApiService {
 
       List<dynamic> response;
       
-      if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
-        response = await supabase
-            .from('messages')
-            .select('*, users(username)')
-            .eq('department', department)
-            .eq('division', division)
-            .order('timestamp', ascending: true);
-      } else if (department.isNotEmpty && department != 'guest') {
-        response = await supabase
-            .from('messages')
-            .select('*, users(username)')
-            .eq('department', department)
-            .order('timestamp', ascending: true);
-      } else if (division.isNotEmpty && division != 'guest') {
-        response = await supabase
-            .from('messages')
-            .select('*, users(username)')
-            .eq('division', division)
-            .order('timestamp', ascending: true);
-      } else {
-        response = await supabase
-            .from('messages')
-            .select('*, users(username)')
-            .order('timestamp', ascending: true);
-      }
+      // جلب جميع الرسائل بدون تصفية بالقسم أو الشعبة
+      response = await supabase
+          .from('messages')
+          .select('*, users(username)')
+          .order('timestamp', ascending: true);
 
       return response.map((item) => Message.fromJson({
         'id': item['id'],
         'content': item['content'],
         'sender_id': item['sender_id'],
         'username': item['users']['username'],
-        'department': item['department'],
-        'division': item['division'],
+        'department': item['department'] ?? '',
+        'division': item['division'] ?? '',
         'timestamp': item['timestamp'],
       })).toList();
     } catch (e) {
