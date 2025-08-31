@@ -10,8 +10,8 @@ class ApiService {
   // دالة للتحقق من الاتصال
   Future<bool> checkConnection() async {
     try {
-      final response = await supabase.from('users').select('count').limit(1).execute();
-      return response.status == 200;
+      final response = await supabase.from('users').select('count').limit(1);
+      return true; // إذا وصلنا هنا بدون error فالطلب نجح
     } catch (e) {
       print('Connection error: $e');
       return false;
@@ -29,11 +29,10 @@ class ApiService {
           .select()
           .eq('code', code)
           .eq('password', password)
-          .single()
-          .execute();
+          .single();
 
-      if (response.status == 200 && response.data != null) {
-        return app_user.AppUser.fromJson(response.data);
+      if (response != null) {
+        return app_user.AppUser.fromJson(response);
       } else {
         throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
       }
@@ -49,37 +48,31 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      dynamic query;
+      List<dynamic> response;
       
       if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
-        query = supabase
+        response = await supabase
             .from('content')
             .select()
             .eq('department', department)
             .eq('division', division);
       } else if (department.isNotEmpty && department != 'guest') {
-        query = supabase
+        response = await supabase
             .from('content')
             .select()
             .eq('department', department);
       } else if (division.isNotEmpty && division != 'guest') {
-        query = supabase
+        response = await supabase
             .from('content')
             .select()
             .eq('division', division);
       } else {
-        query = supabase
+        response = await supabase
             .from('content')
             .select();
       }
 
-      final response = await query.execute();
-
-      if (response.status == 200 && response.data != null) {
-        return (response.data as List).map((item) => Content.fromJson(item)).toList();
-      } else {
-        throw Exception('فشل في جلب المحتوى: ${response.status}');
-      }
+      return response.map((item) => Content.fromJson(item)).toList();
     } catch (e) {
       print('Get content error: $e');
       throw Exception('فشل في جلب المحتوى: $e');
@@ -104,33 +97,29 @@ class ApiService {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${title.replaceAll(' ', '_')}.$fileExtension';
       
       // رفع الملف إلى Supabase Storage
-      final uploadResponse = await supabase.storage
+      await supabase.storage
           .from('content')
           .upload(fileName, file, fileOptions: FileOptions(upsert: true));
 
-      if (uploadResponse != null) {
-        // الحصول على رابط الملف العام
-        final fileUrl = supabase.storage
-            .from('content')
-            .getPublicUrl(fileName);
+      // الحصول على رابط الملف العام
+      final fileUrl = supabase.storage
+          .from('content')
+          .getPublicUrl(fileName);
 
-        // إضافة بيانات المحتوى إلى الجدول
-        final response = await supabase.from('content').insert({
-          'title': title,
-          'file_path': fileUrl,
-          'file_type': fileExtension,
-          'file_size': file.lengthSync().toString(),
-          'uploaded_by': uploadedBy,
-          'department': department,
-          'division': division,
-          'description': description,
-          'upload_date': DateTime.now().toIso8601String(),
-        }).execute();
+      // إضافة بيانات المحتوى إلى الجدول
+      await supabase.from('content').insert({
+        'title': title,
+        'file_path': fileUrl,
+        'file_type': fileExtension,
+        'file_size': file.lengthSync().toString(),
+        'uploaded_by': uploadedBy,
+        'department': department,
+        'division': division,
+        'description': description,
+        'upload_date': DateTime.now().toIso8601String(),
+      });
 
-        return response.status == 201;
-      } else {
-        throw Exception('فشل في رفع الملف إلى التخزين');
-      }
+      return true;
     } catch (e) {
       print('Upload content error: $e');
       throw Exception('فشل في رفع المحتوى: $e');
@@ -143,13 +132,12 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      final response = await supabase
+      await supabase
           .from('content')
           .delete()
-          .eq('id', id)
-          .execute();
+          .eq('id', id);
 
-      return response.status == 204;
+      return true;
     } catch (e) {
       print('Delete content error: $e');
       throw Exception('فشل في حذف المحتوى: $e');
@@ -162,49 +150,43 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      dynamic query;
+      List<dynamic> response;
       
       if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
-        query = supabase
+        response = await supabase
             .from('messages')
             .select('*, users(username)')
             .eq('department', department)
             .eq('division', division)
             .order('timestamp', ascending: true);
       } else if (department.isNotEmpty && department != 'guest') {
-        query = supabase
+        response = await supabase
             .from('messages')
             .select('*, users(username)')
             .eq('department', department)
             .order('timestamp', ascending: true);
       } else if (division.isNotEmpty && division != 'guest') {
-        query = supabase
+        response = await supabase
             .from('messages')
             .select('*, users(username)')
             .eq('division', division)
             .order('timestamp', ascending: true);
       } else {
-        query = supabase
+        response = await supabase
             .from('messages')
             .select('*, users(username)')
             .order('timestamp', ascending: true);
       }
 
-      final response = await query.execute();
-
-      if (response.status == 200 && response.data != null) {
-        return (response.data as List).map((item) => Message.fromJson({
-          'id': item['id'],
-          'content': item['content'],
-          'sender_id': item['sender_id'],
-          'username': item['users']['username'],
-          'department': item['department'],
-          'division': item['division'],
-          'timestamp': item['timestamp'],
-        })).toList();
-      } else {
-        throw Exception('فشل في جلب الرسائل: ${response.status}');
-      }
+      return response.map((item) => Message.fromJson({
+        'id': item['id'],
+        'content': item['content'],
+        'sender_id': item['sender_id'],
+        'username': item['users']['username'],
+        'department': item['department'],
+        'division': item['division'],
+        'timestamp': item['timestamp'],
+      })).toList();
     } catch (e) {
       print('Get messages error: $e');
       throw Exception('فشل في جلب الرسائل: $e');
@@ -222,15 +204,15 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      final response = await supabase.from('messages').insert({
+      await supabase.from('messages').insert({
         'content': content,
         'sender_id': senderId,
         'department': department,
         'division': division,
         'timestamp': DateTime.now().toIso8601String(),
-      }).execute();
+      });
 
-      return response.status == 201;
+      return true;
     } catch (e) {
       print('Send message error: $e');
       throw Exception('فشل في إرسال الرسالة: $e');
@@ -245,14 +227,9 @@ class ApiService {
 
       final response = await supabase
           .from('users')
-          .select()
-          .execute();
+          .select();
 
-      if (response.status == 200 && response.data != null) {
-        return (response.data as List).map((item) => app_user.AppUser.fromJson(item)).toList();
-      } else {
-        throw Exception('فشل في جلب المستخدمين: ${response.status}');
-      }
+      return response.map((item) => app_user.AppUser.fromJson(item)).toList();
     } catch (e) {
       print('Get users error: $e');
       throw Exception('فشل في جلب المستخدمين: $e');
@@ -272,16 +249,16 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      final response = await supabase.from('users').insert({
+      await supabase.from('users').insert({
         'code': code,
         'username': username,
         'department': department,
         'division': division,
         'role': role,
         'password': password,
-      }).execute();
+      });
 
-      return response.status == 201;
+      return true;
     } catch (e) {
       print('Add user error: $e');
       throw Exception('فشل في إضافة المستخدم: $e');
@@ -294,13 +271,12 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      final response = await supabase
+      await supabase
           .from('users')
           .delete()
-          .eq('code', code)
-          .execute();
+          .eq('code', code);
 
-      return response.status == 204;
+      return true;
     } catch (e) {
       print('Delete user error: $e');
       throw Exception('فشل في حذف المستخدم: $e');
