@@ -19,11 +19,24 @@ class _ContentScreenState extends State<ContentScreen> {
   List<Content> _content = [];
   bool _isLoading = false;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadContent();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    // منطق التمرير التلقائي
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadContent() async {
@@ -157,6 +170,7 @@ class _ContentScreenState extends State<ContentScreen> {
               child: _isLoading
                   ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
+                      controller: _scrollController,
                       itemCount: _content.length,
                       itemBuilder: (context, index) {
                         final item = _content[index];
