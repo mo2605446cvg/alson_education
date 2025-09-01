@@ -25,7 +25,6 @@ class _ChatScreenState extends State<ChatScreen> {
     _loadMessages();
     _startAutoRefresh();
     
-    // إضافة listener للتمرير التلقائي
     _scrollController.addListener(() {
       if (_scrollController.position.maxScrollExtent - _scrollController.position.pixels <= 100) {
         _scrollToBottom();
@@ -48,7 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _startAutoRefresh() {
-    Future.delayed(Duration(seconds: 10), () {
+    Future.delayed(Duration(seconds: 5), () {
       if (mounted) {
         _loadMessages();
         _startAutoRefresh();
@@ -92,43 +91,89 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _deleteMessage(Message message) async {
-    if (message.senderId != widget.user.code && widget.user.role != 'admin') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('غير مصرح لك بحذف هذه الرسالة')),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('تأكيد الحذف', textAlign: TextAlign.center),
-        content: Text('هل أنت متأكد من حذف هذه الرسالة؟', textAlign: TextAlign.center),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء'),
+  Widget _buildMessageBubble(Message message, bool isMe) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isMe) ...[
+            CircleAvatar(
+              backgroundColor: Colors.blueAccent,
+              child: Text(
+                message.username[0].toUpperCase(),
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isMe ? Colors.blue[700] : Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 2,
+                    color: Colors.black.withOpacity(0.3),
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isMe)
+                    Text(
+                      message.username,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  SizedBox(height: 4),
+                  Text(
+                    message.content,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(message.timestamp),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('حذف', style: TextStyle(color: Colors.red)),
-          ),
+          if (isMe) ...[
+            SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: Colors.green[700],
+              child: Text(
+                'أنت',
+                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
 
-    if (confirmed == true) {
-      try {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم حذف الرسالة بنجاح')),
-        );
-        _loadMessages();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل في حذف الرسالة')),
-        );
-      }
+  String _formatTimestamp(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return timestamp;
     }
   }
 
@@ -136,158 +181,100 @@ class _ChatScreenState extends State<ChatScreen> {
     return FloatingActionButton(
       onPressed: _scrollToBottom,
       mini: true,
-      child: Icon(Icons.arrow_downward),
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      child: Icon(Icons.arrow_downward, color: Colors.white),
+      backgroundColor: Colors.blue[700],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[850],
+      appBar: AppBar(
+        title: Text('الدردشة العامة', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Stack(
         children: [
-          Column(
-            children: [
-              Expanded(
-                child: _messages.isEmpty
-                    ? Center(
-                        child: Text(
-                          'لا توجد رسائل بعد\nكن أول من يبدأ المحادثة',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[850],
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _messages.isEmpty
+                      ? Center(
+                          child: Text(
+                            'لا توجد رسائل بعد\nكن أول من يبدأ المحادثة',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.all(8),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            final message = _messages[index];
+                            final isMe = message.senderId == widget.user.code;
+                            return _buildMessageBubble(message, isMe);
+                          },
                         ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.all(16),
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) {
-                          final message = _messages[index];
-                          final isMe = message.senderId == widget.user.code;
-
-                          return GestureDetector(
-                            onLongPress: () => _deleteMessage(message),
-                            child: Container(
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              child: Row(
-                                mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                children: [
-                                  if (!isMe) ...[
-                                    CircleAvatar(
-                                      backgroundColor: Theme.of(context).colorScheme.primary,
-                                      child: Text(
-                                        message.username[0].toUpperCase(),
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                  ],
-                                  Flexible(
-                                    child: Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: isMe
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).cardColor,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            blurRadius: 2,
-                                            color: Colors.black12,
-                                            offset: Offset(0, 1),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          if (!isMe)
-                                            Text(
-                                              message.username,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                                color: isMe ? Colors.white70 : Theme.of(context).colorScheme.primary,
-                                              ),
-                                            ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            message.content,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: isMe ? Colors.white : Colors.black87,
-                                            ),
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            message.timestamp,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: isMe ? Colors.white70 : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  if (isMe) ...[
-                                    SizedBox(width: 8),
-                                    CircleAvatar(
-                                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                                      child: Text(
-                                        'أنت',
-                                        style: TextStyle(color: Colors.white, fontSize: 10),
-                                      ),
-                                    ),
-                                  ],
-                                ],
+                ),
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    border: Border(top: BorderSide(color: Colors.grey[700]!)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration(
+                            hintText: 'اكتب رسالتك هنا...',
+                            hintStyle: TextStyle(color: Colors.white70),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: Colors.blue),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            fillColor: Colors.grey[800],
+                            filled: true,
+                          ),
+                          style: TextStyle(color: Colors.white),
+                          maxLines: 3,
+                          minLines: 1,
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : IconButton(
+                              icon: Icon(Icons.send, color: Colors.white),
+                              onPressed: _sendMessage,
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.blue[700],
+                                padding: EdgeInsets.all(12),
                               ),
                             ),
-                          );
-                        },
-                      ),
-              ),
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  border: Border(top: BorderSide(color: Colors.grey[300]!)),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: 'اكتب رسالتك هنا...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        maxLines: 3,
-                        minLines: 1,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    _isLoading
-                        ? CircularProgressIndicator()
-                        : IconButton(
-                            icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                            onPressed: _sendMessage,
-                            style: IconButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.secondary,
-                              padding: EdgeInsets.all(12),
-                            ),
-                          ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           Positioned(
-            bottom: 80,
+            bottom: 70,
             right: 16,
             child: _buildScrollToBottomButton(),
           ),
