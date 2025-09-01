@@ -48,29 +48,11 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      List<dynamic> response;
-      
-      if (department.isNotEmpty && department != 'guest' && division.isNotEmpty && division != 'guest') {
-        response = await supabase
-            .from('content')
-            .select()
-            .eq('department', department)
-            .eq('division', division);
-      } else if (department.isNotEmpty && department != 'guest') {
-        response = await supabase
-            .from('content')
-            .select()
-            .eq('department', department);
-      } else if (division.isNotEmpty && division != 'guest') {
-        response = await supabase
-            .from('content')
-            .select()
-            .eq('division', division);
-      } else {
-        response = await supabase
-            .from('content')
-            .select();
-      }
+      // جلب جميع المحتويات بدون تصفية بالقسم أو الشعبة
+      final response = await supabase
+          .from('content')
+          .select()
+          .order('upload_date', ascending: false);
 
       return response.map((item) => Content.fromJson(item)).toList();
     } catch (e) {
@@ -94,30 +76,46 @@ class ApiService {
 
       // إنشاء اسم ملف فريد
       final fileExtension = file.path.split('.').last.toLowerCase();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${title.replaceAll(' ', '_')}.$fileExtension';
+      final fileName = 'content_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
       
+      print('بدء رفع الملف: $fileName');
+
       // رفع الملف إلى Supabase Storage
-      await supabase.storage
-          .from('content')
-          .upload(fileName, file);
+      try {
+        await supabase.storage
+            .from('content')
+            .upload(fileName, file);
+        print('تم رفع الملف بنجاح');
+      } catch (uploadError) {
+        print('خطأ في رفع الملف: $uploadError');
+        throw Exception('فشل في رفع الملف: $uploadError');
+      }
 
       // الحصول على رابط الملف العام
       final fileUrl = supabase.storage
           .from('content')
           .getPublicUrl(fileName);
 
+      print('رابط الملف: $fileUrl');
+
       // إضافة بيانات المحتوى إلى الجدول
-      await supabase.from('content').insert({
-        'title': title,
-        'file_path': fileUrl,
-        'file_type': fileExtension,
-        'file_size': file.lengthSync().toString(),
-        'uploaded_by': uploadedBy,
-        'department': department,
-        'division': division,
-        'description': description,
-        'upload_date': DateTime.now().toIso8601String(),
-      });
+      try {
+        await supabase.from('content').insert({
+          'title': title,
+          'file_path': fileUrl,
+          'file_type': fileExtension,
+          'file_size': file.lengthSync().toString(),
+          'uploaded_by': uploadedBy,
+          'department': department,
+          'division': division,
+          'description': description,
+          'upload_date': DateTime.now().toIso8601String(),
+        });
+        print('تم إضافة بيانات المحتوى إلى الجدول');
+      } catch (dbError) {
+        print('خطأ في إضافة البيانات: $dbError');
+        throw Exception('فشل في إضافة البيانات: $dbError');
+      }
 
       return true;
     } catch (e) {
@@ -150,10 +148,8 @@ class ApiService {
         throw Exception('فشل في الاتصال بالسيرفر');
       }
 
-      List<dynamic> response;
-      
       // جلب جميع الرسائل بدون تصفية بالقسم أو الشعبة
-      response = await supabase
+      final response = await supabase
           .from('messages')
           .select('*, users(username)')
           .order('timestamp', ascending: true);
