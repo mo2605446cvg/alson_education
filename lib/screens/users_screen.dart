@@ -23,11 +23,33 @@ class _UsersScreenState extends State<UsersScreen> {
   };
   bool _isLoading = false;
   bool _showAddUserForm = false;
+  final ScrollController _scrollController = ScrollController();
+  final ScrollController _listScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadUsers();
+    _scrollController.addListener(_scrollListener);
+    _listScrollController.addListener(_listScrollListener);
+  }
+
+  void _scrollListener() {
+    // منطق التمرير التلقائي للنموذج
+  }
+
+  void _listScrollListener() {
+    // منطق التمرير التلقائي للقائمة
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _listScrollController.removeListener(_listScrollListener);
+    _scrollController.dispose();
+    _listScrollController.dispose();
+    _fieldControllers.values.forEach((controller) => controller.dispose());
+    super.dispose();
   }
 
   Future<void> _loadUsers() async {
@@ -82,12 +104,13 @@ class _UsersScreenState extends State<UsersScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('تأكيد الحذف', textAlign: TextAlign.center),
-        content: Text('هل أنت متأكد من حذف هذا المستخدم؟', textAlign: TextAlign.center),
+        title: Text('تأكيد الحذف', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
+        content: Text('هل أنت متأكد من حذف هذا المستخدم؟', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء'),
+            child: Text('إلغاء', style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -116,47 +139,66 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildAddUserForm() {
-    return Card(
-      elevation: 3,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'إضافة مستخدم جديد',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            SizedBox(height: 20),
-            for (var entry in _fieldControllers.entries)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0),
-                child: TextField(
-                  controller: entry.value,
-                  decoration: InputDecoration(
-                    labelText: _getFieldLabel(entry.key),
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: entry.key == 'password',
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Card(
+        elevation: 3,
+        color: Colors.grey[900],
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'إضافة مستخدم جديد',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(
-                  onPressed: _addUser,
-                  child: Text('إضافة'),
+              SizedBox(height: 20),
+              for (var entry in _fieldControllers.entries)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: TextField(
+                    controller: entry.value,
+                    decoration: InputDecoration(
+                      labelText: _getFieldLabel(entry.key),
+                      labelStyle: TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    obscureText: entry.key == 'password',
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    setState(() => _showAddUserForm = false);
-                  },
-                  child: Text('إلغاء'),
-                ),
-              ],
-            ),
-          ],
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    onPressed: _addUser,
+                    child: Text('إضافة'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _showAddUserForm = false);
+                    },
+                    child: Text('إلغاء', style: TextStyle(color: Colors.white70)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -165,8 +207,11 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[850],
       appBar: AppBar(
-        title: Text('إدارة المستخدمين'),
+        title: Text('إدارة المستخدمين', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Padding(
@@ -176,12 +221,32 @@ class _UsersScreenState extends State<UsersScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('إدارة المستخدمين', style: Theme.of(context).textTheme.displayMedium),
+                Text(
+                  'إدارة المستخدمين',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() => _showAddUserForm = !_showAddUserForm);
+                    if (_showAddUserForm) {
+                      Future.delayed(Duration(milliseconds: 100), () {
+                        _scrollController.animateTo(
+                          _scrollController.position.maxScrollExtent,
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      });
+                    }
                   },
                   child: Text(_showAddUserForm ? 'إخفاء النموذج' : 'إضافة مستخدم'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -192,35 +257,49 @@ class _UsersScreenState extends State<UsersScreen> {
             
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: Colors.white))
                   : _users.isEmpty
                       ? Center(
                           child: Text(
                             'لا يوجد مستخدمين مسجلين',
-                            style: Theme.of(context).textTheme.bodyLarge,
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: _users.length,
-                          itemBuilder: (context, index) {
-                            final user = _users[index];
-                            return Card(
-                              elevation: 2,
-                              margin: EdgeInsets.only(bottom: 10),
-                              child: ListTile(
-                                title: Text(user.username, style: TextStyle(fontWeight: FontWeight.bold)),
-                                subtitle: Text('كود: ${user.code} - الدور: ${user.role}'),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteUser(user),
-                                  tooltip: 'حذف',
+                      : Scrollbar(
+                          controller: _listScrollController,
+                          child: ListView.builder(
+                            controller: _listScrollController,
+                            itemCount: _users.length,
+                            itemBuilder: (context, index) {
+                              final user = _users[index];
+                              return Card(
+                                elevation: 2,
+                                color: Colors.grey[900],
+                                margin: EdgeInsets.only(bottom: 10),
+                                child: ListTile(
+                                  title: Text(
+                                    user.username,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'كود: ${user.code} - الدور: ${user.role}',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteUser(user),
+                                    tooltip: 'حذف',
+                                  ),
+                                  onTap: () {
+                                    // يمكن إضافة تفاصيل المستخدم عند النقر
+                                  },
                                 ),
-                                onTap: () {
-                                  // يمكن إضافة تفاصيل المستخدم عند النقر
-                                },
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
             ),
           ],
@@ -239,11 +318,5 @@ class _UsersScreenState extends State<UsersScreen> {
       case 'password': return 'كلمة المرور';
       default: return key;
     }
-  }
-
-  @override
-  void dispose() {
-    _fieldControllers.values.forEach((controller) => controller.dispose());
-    super.dispose();
   }
 }
