@@ -42,14 +42,11 @@ class _ContentScreenState extends State<ContentScreen> {
   Future<void> _loadContent() async {
     setState(() => _isLoading = true);
     try {
-      final content = await widget.apiService.getContent(
-        widget.user.department,
-        widget.user.division,
-      );
+      final content = await widget.apiService.getContent('', '');
       setState(() => _content = content);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text('فشل في جلب المحتوى: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -82,12 +79,13 @@ class _ContentScreenState extends State<ContentScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('تأكيد الحذف', textAlign: TextAlign.center),
-        content: Text('هل أنت متأكد من حذف هذا المحتوى؟', textAlign: TextAlign.center),
+        title: Text('تأكيد الحذف', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
+        content: Text('هل أنت متأكد من حذف هذا المحتوى؟', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء'),
+            child: Text('إلغاء', style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -101,8 +99,8 @@ class _ContentScreenState extends State<ContentScreen> {
       try {
         final success = await widget.apiService.deleteContent(
           item.id,
-          widget.user.department,
-          widget.user.division,
+          '',
+          '',
         );
         
         if (success) {
@@ -122,26 +120,34 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _buildFileIcon(String fileType) {
     switch (fileType) {
       case 'pdf':
-        return Icon(Icons.picture_as_pdf, size: 40, color: Theme.of(context).colorScheme.primary);
+        return Icon(Icons.picture_as_pdf, size: 40, color: Colors.blue);
       case 'jpg':
       case 'png':
       case 'jpeg':
-        return Icon(Icons.image, size: 40, color: Theme.of(context).colorScheme.primary);
+        return Icon(Icons.image, size: 40, color: Colors.green);
       case 'txt':
-        return Icon(Icons.text_snippet, size: 40, color: Theme.of(context).colorScheme.primary);
+        return Icon(Icons.text_snippet, size: 40, color: Colors.orange);
       default:
-        return Icon(Icons.insert_drive_file, size: 40, color: Theme.of(context).colorScheme.primary);
+        return Icon(Icons.insert_drive_file, size: 40, color: Colors.grey);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[850],
+      appBar: AppBar(
+        title: Text('المحتوى التعليمي', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text('المحتوى', style: Theme.of(context).textTheme.displayMedium),
+            Text('المحتوى المتاح للجميع', 
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
             SizedBox(height: 20),
             Row(
               children: [
@@ -150,82 +156,110 @@ class _ContentScreenState extends State<ContentScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       labelText: 'بحث في المحتوى...',
+                      labelStyle: TextStyle(color: Colors.white70),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                      fillColor: Colors.grey[800],
+                      filled: true,
                     ),
+                    style: TextStyle(color: Colors.white),
                     onChanged: (value) => setState(() {}),
                   ),
                 ),
                 SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _loadContent,
-                  child: Text('تحديث المحتوى'),
-                  style: ElevatedButton.styleFrom(padding: EdgeInsets.all(15)),
+                  child: Text('تحديث'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.all(15),
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 20),
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _content.length,
-                      itemBuilder: (context, index) {
-                        final item = _content[index];
-                        final searchTerm = _searchController.text.toLowerCase();
-                        
-                        if (searchTerm.isNotEmpty &&
-                            !item.title.toLowerCase().contains(searchTerm)) {
-                          return SizedBox.shrink();
-                        }
+                  ? Center(child: CircularProgressIndicator(color: Colors.white))
+                  : _content.isEmpty
+                      ? Center(
+                          child: Text(
+                            'لا يوجد محتوى متاح حالياً',
+                            style: TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _content.length,
+                          itemBuilder: (context, index) {
+                            final item = _content[index];
+                            final searchTerm = _searchController.text.toLowerCase();
+                            
+                            if (searchTerm.isNotEmpty &&
+                                !item.title.toLowerCase().contains(searchTerm) &&
+                                !item.description.toLowerCase().contains(searchTerm)) {
+                              return SizedBox.shrink();
+                            }
 
-                        return Card(
-                          elevation: 3,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: _buildFileIcon(item.fileType),
-                                  onPressed: () => _viewContent(item),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(item.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text('نوع الملف: ${item.fileType}', style: TextStyle(color: Colors.grey)),
-                                      Text('حجم الملف: ${item.formattedSize}', style: TextStyle(color: Colors.grey)),
-                                      Text('تم الرفع بواسطة: ${item.uploadedBy}', style: TextStyle(color: Colors.grey)),
-                                      Text('تاريخ الرفع: ${item.uploadDate}', style: TextStyle(color: Colors.grey)),
-                                      Text('نبذة: ${item.description}', maxLines: 2, overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
-                                ),
-                                Column(
+                            return Card(
+                              elevation: 3,
+                              color: Colors.grey[900],
+                              margin: EdgeInsets.only(bottom: 10),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
                                   children: [
                                     IconButton(
-                                      icon: Icon(Icons.visibility),
+                                      icon: _buildFileIcon(item.fileType),
                                       onPressed: () => _viewContent(item),
-                                      tooltip: 'عرض',
                                     ),
-                                    if (widget.user.role == 'admin')
-                                      IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => _deleteContent(item),
-                                        tooltip: 'حذف',
+                                    SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(item.title, 
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                          SizedBox(height: 4),
+                                          Text('نوع الملف: ${item.fileType}', style: TextStyle(color: Colors.white70)),
+                                          Text('حجم الملف: ${item.formattedSize}', style: TextStyle(color: Colors.white70)),
+                                          Text('تم الرفع بواسطة: ${item.uploadedBy}', style: TextStyle(color: Colors.white70)),
+                                          Text('تاريخ الرفع: ${item.uploadDate}', style: TextStyle(color: Colors.white70)),
+                                          SizedBox(height: 4),
+                                          Text('نبذة: ${item.description}', 
+                                              maxLines: 2, 
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(color: Colors.white70)),
+                                        ],
                                       ),
+                                    ),
+                                    Column(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.visibility, color: Colors.blue),
+                                          onPressed: () => _viewContent(item),
+                                          tooltip: 'عرض',
+                                        ),
+                                        if (widget.user.role == 'admin')
+                                          IconButton(
+                                            icon: Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () => _deleteContent(item),
+                                            tooltip: 'حذف',
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),
