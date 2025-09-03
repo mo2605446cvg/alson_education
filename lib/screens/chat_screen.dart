@@ -24,12 +24,13 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadMessages();
     _startAutoRefresh();
-    
-    _scrollController.addListener(() {
-      if (_scrollController.position.maxScrollExtent - _scrollController.position.pixels <= 100) {
-        _scrollToBottom();
-      }
-    });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMessages() async {
@@ -94,78 +95,127 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageBubble(Message message, bool isMe) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              backgroundColor: Colors.blueAccent,
-              child: Text(
-                message.username[0].toUpperCase(),
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isMe ? Colors.blue[700] : Colors.grey[900],
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 2,
-                    color: Colors.black.withOpacity(0.3),
-                    offset: Offset(0, 1),
+          Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              if (!isMe) ...[
+                CircleAvatar(
+                  backgroundColor: Colors.blueAccent,
+                  child: Text(
+                    message.username[0].toUpperCase(),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isMe)
-                    Text(
-                      message.username,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Colors.white70,
+                ),
+                SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isMe ? Colors.blue[700] : Colors.grey[900],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 2,
+                        color: Colors.black.withOpacity(0.3),
+                        offset: Offset(0, 1),
                       ),
-                    ),
-                  SizedBox(height: 4),
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                    ],
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    _formatTimestamp(message.timestamp),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white54,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!isMe)
+                        Text(
+                          message.username,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      SizedBox(height: 4),
+                      Text(
+                        message.content,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        _formatTimestamp(message.timestamp),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              if (isMe) ...[
+                SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: Colors.green[700],
+                  child: Text(
+                    'أنت',
+                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (isMe) ...[
-            SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: Colors.green[700],
-              child: Text(
-                'أنت',
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          
+          // زر التفاعل بالرموز التعبيرية (للمستخدمين العاديين فقط)
+          if (widget.user.role != 'admin')
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: IconButton(
+                icon: Icon(Icons.emoji_emotions, size: 16, color: Colors.white70),
+                onPressed: () => _showEmojiPicker(message),
+                tooltip: 'إضافة تفاعل',
               ),
             ),
-          ],
         ],
       ),
     );
+  }
+
+  void _showEmojiPicker(Message message) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        height: 200,
+        color: Colors.grey[900],
+        child: GridView.count(
+          crossAxisCount: 6,
+          children: ['👍', '❤️', '😂', '😮', '😢', '😡']
+              .map((emoji) => IconButton(
+                    icon: Text(emoji, style: TextStyle(fontSize: 24)),
+                    onPressed: () {
+                      _addReaction(message, emoji);
+                      Navigator.pop(context);
+                    },
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addReaction(Message message, String emoji) async {
+    try {
+      // يمكن حفظ التفاعل في قاعدة البيانات هنا
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم إضافة التفاعل: $emoji')),
+      );
+    } catch (e) {
+      print('Error adding reaction: $e');
+    }
   }
 
   String _formatTimestamp(String timestamp) {
@@ -183,6 +233,77 @@ class _ChatScreenState extends State<ChatScreen> {
       mini: true,
       child: Icon(Icons.arrow_downward, color: Colors.white),
       backgroundColor: Colors.blue[700],
+    );
+  }
+
+  Widget _buildMessageInput() {
+    final isAdmin = widget.user.role == 'admin';
+
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        border: Border(top: BorderSide(color: Colors.grey[700]!)),
+      ),
+      child: isAdmin
+          ? Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'اكتب رسالتك هنا...',
+                      hintStyle: TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      fillColor: Colors.grey[800],
+                      filled: true,
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    maxLines: 3,
+                    minLines: 1,
+                    onSubmitted: (_) => _sendMessage(),
+                  ),
+                ),
+                SizedBox(width: 8),
+                _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : IconButton(
+                        icon: Icon(Icons.send, color: Colors.white),
+                        onPressed: _sendMessage,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.blue[700],
+                          padding: EdgeInsets.all(12),
+                        ),
+                      ),
+              ],
+            )
+          : Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'يمكنك فقط مشاهدة الرسائل. التواصل مع المدير للاستفسارات.',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -224,52 +345,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           },
                         ),
                 ),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    border: Border(top: BorderSide(color: Colors.grey[700]!)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: 'اكتب رسالتك هنا...',
-                            hintStyle: TextStyle(color: Colors.white70),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(color: Colors.blue),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            fillColor: Colors.grey[800],
-                            filled: true,
-                          ),
-                          style: TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          minLines: 1,
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      _isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : IconButton(
-                              icon: Icon(Icons.send, color: Colors.white),
-                              onPressed: _sendMessage,
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.blue[700],
-                                padding: EdgeInsets.all(12),
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
+                _buildMessageInput(),
               ],
             ),
           ),
@@ -281,12 +357,5 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 }

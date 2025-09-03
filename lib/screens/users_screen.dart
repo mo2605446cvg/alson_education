@@ -25,27 +25,16 @@ class _UsersScreenState extends State<UsersScreen> {
   bool _showAddUserForm = false;
   final ScrollController _scrollController = ScrollController();
   final ScrollController _listScrollController = ScrollController();
+  String? _selectedRole = 'user';
 
   @override
   void initState() {
     super.initState();
     _loadUsers();
-    _scrollController.addListener(_scrollListener);
-    _listScrollController.addListener(_listScrollListener);
-  }
-
-  void _scrollListener() {
-    // منطق التمرير التلقائي للنموذج
-  }
-
-  void _listScrollListener() {
-    // منطق التمرير التلقائي للقائمة
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _listScrollController.removeListener(_listScrollListener);
     _scrollController.dispose();
     _listScrollController.dispose();
     _fieldControllers.values.forEach((controller) => controller.dispose());
@@ -67,9 +56,11 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Future<void> _addUser() async {
-    if (!_fieldControllers.values.every((controller) => controller.text.isNotEmpty)) {
+    if (_fieldControllers['code']!.text.isEmpty ||
+        _fieldControllers['username']!.text.isEmpty ||
+        _fieldControllers['password']!.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى إدخال جميع الحقول')),
+        SnackBar(content: Text('يرجى إدخال الحقول الإلزامية (الكود، الاسم، كلمة المرور)')),
       );
       return;
     }
@@ -80,7 +71,7 @@ class _UsersScreenState extends State<UsersScreen> {
         username: _fieldControllers['username']!.text,
         department: _fieldControllers['department']!.text,
         division: _fieldControllers['division']!.text,
-        role: _fieldControllers['role']!.text,
+        role: _selectedRole!,
         password: _fieldControllers['password']!.text,
       );
 
@@ -90,12 +81,15 @@ class _UsersScreenState extends State<UsersScreen> {
         );
         
         _fieldControllers.values.forEach((controller) => controller.clear());
-        setState(() => _showAddUserForm = false);
+        setState(() {
+          _showAddUserForm = false;
+          _selectedRole = 'user';
+        });
         _loadUsers();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في إضافة المستخدم')),
+        SnackBar(content: Text('فشل في إضافة المستخدم: $e')),
       );
     }
   }
@@ -132,7 +126,7 @@ class _UsersScreenState extends State<UsersScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل في حذف المستخدم')),
+          SnackBar(content: Text('فشل في حذف المستخدم: $e')),
         );
       }
     }
@@ -158,40 +152,161 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              for (var entry in _fieldControllers.entries)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: TextField(
-                    controller: entry.value,
-                    decoration: InputDecoration(
-                      labelText: _getFieldLabel(entry.key),
-                      labelStyle: TextStyle(color: Colors.white70),
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
-                    style: TextStyle(color: Colors.white),
-                    obscureText: entry.key == 'password',
+              
+              // حقل الكود
+              TextField(
+                controller: _fieldControllers['code'],
+                decoration: InputDecoration(
+                  labelText: 'كود المستخدم *',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
                   ),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.code, color: Colors.white70),
                 ),
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              
+              // حقل الاسم
+              TextField(
+                controller: _fieldControllers['username'],
+                decoration: InputDecoration(
+                  labelText: 'اسم المستخدم *',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.person, color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              
+              // اختيار القسم
+              DropdownButtonFormField<String>(
+                value: _fieldControllers['department']!.text.isEmpty ? null : _fieldControllers['department']!.text,
+                decoration: InputDecoration(
+                  labelText: 'القسم',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.category, color: Colors.white70),
+                ),
+                items: ['', 'قسم اللغة العربية', 'قسم اللغة الإنجليزية', 'قسم الترجمة', 'قسم العلوم الإنسانية']
+                    .map((String department) {
+                  return DropdownMenuItem<String>(
+                    value: department.isEmpty ? null : department,
+                    child: Text(department.isEmpty ? 'لا يوجد' : department, 
+                        style: TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  _fieldControllers['department']!.text = newValue ?? '';
+                },
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              
+              // اختيار الشعبة
+              DropdownButtonFormField<String>(
+                value: _fieldControllers['division']!.text.isEmpty ? null : _fieldControllers['division']!.text,
+                decoration: InputDecoration(
+                  labelText: 'الشعبة',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.group, color: Colors.white70),
+                ),
+                items: ['', 'الشعبة أ', 'الشعبة ب', 'الشعبة ج', 'الشعبة د']
+                    .map((String division) {
+                  return DropdownMenuItem<String>(
+                    value: division.isEmpty ? null : division,
+                    child: Text(division.isEmpty ? 'لا يوجد' : division, 
+                        style: TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  _fieldControllers['division']!.text = newValue ?? '';
+                },
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              
+              // اختيار الدور
+              DropdownButtonFormField<String>(
+                value: _selectedRole,
+                decoration: InputDecoration(
+                  labelText: 'الدور *',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.security, color: Colors.white70),
+                ),
+                items: [
+                  DropdownMenuItem<String>(
+                    value: 'user',
+                    child: Text('مستخدم عادي', style: TextStyle(color: Colors.white)),
+                  ),
+                  DropdownMenuItem<String>(
+                    value: 'admin',
+                    child: Text('مدير', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedRole = newValue;
+                  });
+                },
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              
+              // حقل كلمة المرور
+              TextField(
+                controller: _fieldControllers['password'],
+                decoration: InputDecoration(
+                  labelText: 'كلمة المرور *',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  prefixIcon: Icon(Icons.lock, color: Colors.white70),
+                ),
+                style: TextStyle(color: Colors.white),
+                obscureText: true,
+              ),
               SizedBox(height: 20),
+              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
                     onPressed: _addUser,
-                    child: Text('إضافة'),
+                    child: Text('إضافة مستخدم'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
                       foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                   ),
                   TextButton(
                     onPressed: () {
                       setState(() => _showAddUserForm = false);
+                      _fieldControllers.values.forEach((controller) => controller.clear());
+                      _selectedRole = 'user';
                     },
                     child: Text('إلغاء', style: TextStyle(color: Colors.white70)),
                   ),
@@ -232,15 +347,6 @@ class _UsersScreenState extends State<UsersScreen> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() => _showAddUserForm = !_showAddUserForm);
-                    if (_showAddUserForm) {
-                      Future.delayed(Duration(milliseconds: 100), () {
-                        _scrollController.animateTo(
-                          _scrollController.position.maxScrollExtent,
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                        );
-                      });
-                    }
                   },
                   child: Text(_showAddUserForm ? 'إخفاء النموذج' : 'إضافة مستخدم'),
                   style: ElevatedButton.styleFrom(
@@ -285,7 +391,7 @@ class _UsersScreenState extends State<UsersScreen> {
                                     ),
                                   ),
                                   subtitle: Text(
-                                    'كود: ${user.code} - الدور: ${user.role}',
+                                    'كود: ${user.code} - الدور: ${user.role == 'admin' ? 'مدير' : 'مستخدم'}',
                                     style: TextStyle(color: Colors.white70),
                                   ),
                                   trailing: IconButton(
@@ -293,9 +399,6 @@ class _UsersScreenState extends State<UsersScreen> {
                                     onPressed: () => _deleteUser(user),
                                     tooltip: 'حذف',
                                   ),
-                                  onTap: () {
-                                    // يمكن إضافة تفاصيل المستخدم عند النقر
-                                  },
                                 ),
                               );
                             },
@@ -306,17 +409,5 @@ class _UsersScreenState extends State<UsersScreen> {
         ),
       ),
     );
-  }
-
-  String _getFieldLabel(String key) {
-    switch (key) {
-      case 'code': return 'كود المستخدم';
-      case 'username': return 'اسم المستخدم';
-      case 'department': return 'القسم';
-      case 'division': return 'الشعبة';
-      case 'role': return 'الدور';
-      case 'password': return 'كلمة المرور';
-      default: return key;
-    }
   }
 }
