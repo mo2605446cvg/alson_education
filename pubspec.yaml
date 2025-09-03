@@ -17,8 +17,8 @@ dependencies:
   shared_preferences: ^2.2.2
   http: ^0.13.6
   geolocator: ^11.0.1
-  syncfusion_flutter_pdfviewer: ^22.2.10
   device_info_plus: ^10.0.0
+  syncfusion_flutter_pdfviewer: ^22.2.10
 
 dev_dependencies:
   flutter_test:
@@ -38,3 +38,4 @@ flutter:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
+
