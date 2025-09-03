@@ -10,7 +10,7 @@ class ApiService {
   // دالة للتحقق من الاتصال
   Future<bool> checkConnection() async {
     try {
-      await supabase.from('users').select('count').limit(1);
+      await supabase.from('users').select().limit(1);
       return true;
     } catch (e) {
       print('Connection error: $e');
@@ -82,17 +82,9 @@ class ApiService {
 
       // رفع الملف إلى Supabase Storage
       try {
-        final uploadResponse = await supabase.storage
+        await supabase.storage
             .from('content')
-            .upload(fileName, file, fileOptions: FileOptions(
-              upsert: true,
-              contentType: _getMimeType(fileExtension),
-            ));
-
-        if (uploadResponse.error != null) {
-          throw Exception('خطأ في رفع الملف: ${uploadResponse.error!.message}');
-        }
-        
+            .upload(fileName, file);
         print('تم رفع الملف بنجاح');
       } catch (uploadError) {
         print('خطأ في رفع الملف: $uploadError');
@@ -100,17 +92,17 @@ class ApiService {
       }
 
       // الحصول على رابط الملف العام
-      final fileUrlResponse = supabase.storage
+      final fileUrl = supabase.storage
           .from('content')
           .getPublicUrl(fileName);
 
-      print('رابط الملف: $fileUrlResponse');
+      print('رابط الملف: $fileUrl');
 
       // إضافة بيانات المحتوى إلى الجدول
       try {
-        final insertResponse = await supabase.from('content').insert({
+        await supabase.from('content').insert({
           'title': title,
-          'file_path': fileUrlResponse,
+          'file_path': fileUrl,
           'file_type': fileExtension,
           'file_size': file.lengthSync().toString(),
           'uploaded_by': uploadedBy,
@@ -118,12 +110,7 @@ class ApiService {
           'division': division,
           'description': description,
           'upload_date': DateTime.now().toIso8601String(),
-        }).execute();
-
-        if (insertResponse.error != null) {
-          throw Exception('خطأ في إضافة البيانات: ${insertResponse.error!.message}');
-        }
-        
+        });
         print('تم إضافة بيانات المحتوى إلى الجدول');
       } catch (dbError) {
         print('خطأ في إضافة البيانات: $dbError');
@@ -134,21 +121,6 @@ class ApiService {
     } catch (e) {
       print('Upload content error: $e');
       throw Exception('فشل في رفع المحتوى: $e');
-    }
-  }
-
-  String _getMimeType(String extension) {
-    switch (extension) {
-      case 'pdf': return 'application/pdf';
-      case 'jpg': return 'image/jpeg';
-      case 'jpeg': return 'image/jpeg';
-      case 'png': return 'image/png';
-      case 'txt': return 'text/plain';
-      case 'mp4': return 'video/mp4';
-      case 'mp3': return 'audio/mpeg';
-      case 'doc': return 'application/msword';
-      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      default: return 'application/octet-stream';
     }
   }
 
@@ -179,18 +151,10 @@ class ApiService {
       // جلب جميع الرسائل بدون تصفية بالقسم أو الشعبة
       final response = await supabase
           .from('messages')
-          .select('*, users(username)')
+          .select()
           .order('timestamp', ascending: true);
 
-      return response.map((item) => Message.fromJson({
-        'id': item['id'],
-        'content': item['content'],
-        'sender_id': item['sender_id'],
-        'username': item['users']['username'],
-        'department': item['department'] ?? '',
-        'division': item['division'] ?? '',
-        'timestamp': item['timestamp'],
-      })).toList();
+      return response.map((item) => Message.fromJson(item)).toList();
     } catch (e) {
       print('Get messages error: $e');
       throw Exception('فشل في جلب الرسائل: $e');
@@ -213,29 +177,24 @@ class ApiService {
           .from('users')
           .select('role')
           .eq('code', senderId)
-          .single()
-          .execute();
+          .single();
 
-      if (userResponse.error != null) {
+      if (userResponse == null) {
         throw Exception('خطأ في التحقق من صلاحية المستخدم');
       }
 
-      final userRole = userResponse.data['role'];
+      final userRole = userResponse['role'];
       if (userRole != 'admin') {
         throw Exception('غير مسموح للمستخدمين العاديين بإرسال الرسائل');
       }
 
-      final insertResponse = await supabase.from('messages').insert({
+      await supabase.from('messages').insert({
         'content': content,
         'sender_id': senderId,
         'department': department,
         'division': division,
         'timestamp': DateTime.now().toIso8601String(),
-      }).execute();
-
-      if (insertResponse.error != null) {
-        throw Exception('خطأ في إرسال الرسالة: ${insertResponse.error!.message}');
-      }
+      });
 
       return true;
     } catch (e) {

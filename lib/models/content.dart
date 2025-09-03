@@ -8,6 +8,8 @@ class Content {
   final String uploadedBy;
   final String uploadDate;
   final String description;
+  final String department;
+  final String division;
   final String formattedSize;
 
   Content({
@@ -19,6 +21,8 @@ class Content {
     required this.uploadedBy,
     required this.uploadDate,
     required this.description,
+    required this.department,
+    required this.division,
   }) : formattedSize = _formatSize(fileSize);
 
   static String _formatSize(String size) {
@@ -48,6 +52,8 @@ class Content {
       uploadedBy: json['uploaded_by'] ?? '',
       uploadDate: json['upload_date'] ?? '',
       description: json['description'] ?? '',
+      department: json['department'] ?? '',
+      division: json['division'] ?? '',
     );
   }
 }
