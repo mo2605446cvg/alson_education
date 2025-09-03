@@ -15,7 +15,7 @@ dependencies:
   supabase_flutter: ^2.0.0
   file_picker: ^5.5.0
   shared_preferences: ^2.2.2
-  http: ^0.13.6
+  http: ^1.1.0
   geolocator: ^11.0.1
   device_info_plus: ^10.0.0
   syncfusion_flutter_pdfviewer: ^22.2.10
@@ -38,4 +38,5 @@ flutter:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
+
 
