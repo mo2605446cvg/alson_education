@@ -1,3 +1,4 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
@@ -6,13 +7,21 @@ import 'package:alson_education/screens/chat_screen.dart';
 import 'package:alson_education/screens/upload_screen.dart';
 import 'package:alson_education/screens/users_screen.dart';
 import 'package:alson_education/screens/admin_dashboard.dart';
+import 'package:alson_education/screens/notifications_screen.dart';
+import 'package:alson_education/services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final app_user.AppUser user;
   final ApiService apiService;
   final Function() onLogout;
+  final NotificationService notificationService;
 
-  HomeScreen({required this.user, required this.apiService, required this.onLogout});
+  HomeScreen({
+    required this.user,
+    required this.apiService,
+    required this.onLogout,
+    required this.notificationService,
+  });
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -63,6 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return UsersScreen(apiService: widget.apiService);
         }
         return _buildHomeContent();
+      case 5:
+        return NotificationsScreen(notificationService: widget.notificationService);
       default:
         return _buildHomeContent();
     }
@@ -119,7 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AdminDashboard(user: widget.user, apiService: widget.apiService, onLogout: widget.onLogout),
+                  builder: (context) => AdminDashboard(
+                    user: widget.user, 
+                    apiService: widget.apiService, 
+                    onLogout: widget.onLogout
+                  ),
                 ),
               ),
               child: Text("لوحة التحكم"),
@@ -143,6 +158,20 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         centerTitle: true,
         actions: [
+          ValueListenableBuilder<int>(
+            valueListenable: ValueNotifier<int>(widget.notificationService.getUnreadCount()),
+            builder: (context, count, child) {
+              return Badge.count(
+                count: count,
+                child: IconButton(
+                  icon: Icon(Icons.notifications),
+                  onPressed: () {
+                    _onItemTapped(5); // الانتقال لشاشة الإشعارات
+                  },
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: widget.onLogout,
@@ -181,6 +210,18 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.people),
               label: 'المستخدمين',
             ),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<int>(
+              valueListenable: ValueNotifier<int>(widget.notificationService.getUnreadCount()),
+              builder: (context, count, child) {
+                return Badge.count(
+                  count: count,
+                  child: Icon(Icons.notifications),
+                );
+              },
+            ),
+            label: 'الإشعارات',
+          ),
         ],
       ),
     );
