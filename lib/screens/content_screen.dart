@@ -31,39 +31,13 @@ class _ContentScreenState extends State<ContentScreen> {
   Future<void> _loadContent() async {
     setState(() => _isLoading = true);
     try {
+      print('جلب المحتوى...');
       final content = await widget.apiService.getContent();
+      print('تم جلب ${content.length} عنصر محتوى');
       
-      // تحميل أسماء المستخدمين لكل محتوى
-      final usersMap = <String, String>{};
-      for (var item in content) {
-        if (item.uploadedBy.isNotEmpty && !usersMap.containsKey(item.uploadedBy)) {
-          try {
-            final user = await widget.apiService.getUserByCode(item.uploadedBy);
-            usersMap[item.uploadedBy] = user.username;
-          } catch (e) {
-            usersMap[item.uploadedBy] = 'مستخدم';
-          }
-        }
-      }
-      
-      // تحديث المحتوى بأسماء المستخدمين
-      final updatedContent = content.map((item) {
-        return Content(
-          id: item.id,
-          title: item.title,
-          filePath: item.filePath,
-          fileType: item.fileType,
-          fileSize: item.fileSize,
-          uploadedBy: usersMap[item.uploadedBy] ?? item.uploadedBy,
-          uploadDate: item.uploadDate,
-          description: item.description,
-          department: item.department,
-          division: item.division,
-        );
-      }).toList();
-      
-      setState(() => _content = updatedContent);
+      setState(() => _content = content);
     } catch (e) {
+      print('فشل في جلب المحتوى: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل في جلب المحتوى: $e')),
       );

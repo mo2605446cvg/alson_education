@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/models/content.dart';
 import 'package:alson_education/models/message.dart';
-import 'package:alson_education/services/notification_service.dart';
 
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
@@ -35,13 +34,22 @@ class ApiService {
 
   Future<List<Content>> getContent() async {
     try {
+      print('جلب المحتوى من السيرفر...');
       final response = await supabase
           .from('content')
           .select()
           .order('upload_date', ascending: false);
 
+      print('تم جلب ${response.length} عنصر من المحتوى');
+      
+      if (response.isEmpty) {
+        print('لا يوجد محتوى في قاعدة البيانات');
+        return [];
+      }
+
       return response.map((item) => Content.fromJson(item)).toList();
     } catch (e) {
+      print('خطأ في جلب المحتوى: $e');
       throw Exception('فشل في جلب المحتوى: $e');
     }
   }
@@ -53,28 +61,26 @@ class ApiService {
     required String description,
   }) async {
     try {
-      // التحقق من وجود المستخدم في جدول users
-      final userCheck = await supabase
+      print('بدء رفع المحتوى: $title');
+      
+      // البحث عن المستخدم باستخدام username والحصول على code
+      final userResponse = await supabase
           .from('users')
-          .select()
+          .select('code')
           .eq('username', uploadedBy)
           .maybeSingle();
 
-      String uploadedByCode = uploadedBy;
-      if (userCheck == null) {
-        // إذا لم يوجد المستخدم، نستخدم كود المستخدم الحالي بدلاً من الاسم
-        final currentUser = await supabase
-            .from('users')
-            .select('code')
-            .eq('username', uploadedBy)
-            .maybeSingle();
-        
-        if (currentUser != null) {
-          uploadedByCode = currentUser['code'];
-        }
+      String uploadedByCode;
+      if (userResponse != null && userResponse['code'] != null) {
+        uploadedByCode = userResponse['code'];
+        print('تم العثور على المستخدم: $uploadedByCode');
+      } else {
+        // إذا لم يتم العثور على المستخدم، استخدام القيمة كما هي
+        uploadedByCode = uploadedBy;
+        print('使用用户名作为 uploaded_by: $uploadedBy');
       }
 
-      await supabase.from('content').insert({
+      final insertData = {
         'title': title,
         'file_path': fileUrl,
         'file_type': fileUrl.split('.').last.toLowerCase(),
@@ -84,13 +90,23 @@ class ApiService {
         'division': '',
         'description': description,
         'upload_date': DateTime.now().toIso8601String(),
-      });
+      };
 
-      // إضافة إشعار
-      NotificationService().addNotification('محتوى جديد: $title', isContent: true);
-      
-      return true;
+      print('بيانات الإدخال: $insertData');
+
+      final response = await supabase
+          .from('content')
+          .insert(insertData)
+          .select();
+
+      if (response != null && response.isNotEmpty) {
+        print('تم رفع المحتوى بنجاح');
+        return true;
+      } else {
+        throw Exception('فشل في إضافة المحتوى إلى قاعدة البيانات');
+      }
     } catch (e) {
+      print('خطأ في رفع المحتوى: $e');
       throw Exception('فشل في رفع المحتوى: $e');
     }
   }
@@ -154,9 +170,6 @@ class ApiService {
         'timestamp': DateTime.now().toIso8601String(),
       });
 
-      // إضافة إشعار
-      NotificationService().addNotification('رسالة جديدة: ${content.length > 20 ? content.substring(0, 20) + '...' : content}', isMessage: true);
-      
       return true;
     } catch (e) {
       throw Exception('فشل في إرسال الرسالة: $e');

@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
-  factory NotificationService() => _instance;
-  NotificationService._internal();
+  ValueNotifier<int> messageCount = ValueNotifier<int>(0);
+  ValueNotifier<int> contentCount = ValueNotifier<int>(0);
+  List<String> notifications = [];
 
-  final ValueNotifier<int> messageCount = ValueNotifier<int>(0);
-  final ValueNotifier<int> contentCount = ValueNotifier<int>(0);
-  final List<String> _notifications = [];
+  NotificationService() {
+    _init();
+  }
 
-  Future<void> init() async {
+  Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     messageCount.value = prefs.getInt('message_count') ?? 0;
     contentCount.value = prefs.getInt('content_count') ?? 0;
+    
+    // تحميل الإشعارات المحفوظة
+    final savedNotifications = prefs.getStringList('notifications') ?? [];
+    notifications = savedNotifications;
   }
 
   Future<void> addNotification(String message, {bool isMessage = false, bool isContent = false}) async {
-    _notifications.insert(0, '${DateTime.now().toString()} - $message');
+    final notificationText = '${DateTime.now().hour}:${DateTime.now().minute} - $message';
+    notifications.insert(0, notificationText);
     
     if (isMessage) {
       messageCount.value++;
@@ -29,19 +34,26 @@ class NotificationService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('message_count', messageCount.value);
     await prefs.setInt('content_count', contentCount.value);
+    await prefs.setStringList('notifications', notifications);
+    
+    // إشعار التحديث للواجهات
+    messageCount.notifyListeners();
+    contentCount.notifyListeners();
   }
 
   Future<void> clearNotifications() async {
-    _notifications.clear();
+    notifications.clear();
     messageCount.value = 0;
     contentCount.value = 0;
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('message_count');
     await prefs.remove('content_count');
+    await prefs.remove('notifications');
+    
+    messageCount.notifyListeners();
+    contentCount.notifyListeners();
   }
-
-  List<String> getNotifications() => _notifications;
 
   int getUnreadCount() => messageCount.value + contentCount.value;
 }
