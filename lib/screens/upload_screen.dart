@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:alson_education/services/api_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
 
@@ -17,45 +15,15 @@ class UploadScreen extends StatefulWidget {
 class _UploadScreenState extends State<UploadScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  File? _selectedFile;
-  String _fileName = 'لم يتم اختيار ملف';
+  final TextEditingController _fileUrlController = TextEditingController();
   bool _isUploading = false;
-  String? _selectedDepartment;
-  String? _selectedDivision;
-
-  // قوائم الاختيار
-  final List<String> _departments = ['قسم اللغة العربية', 'قسم اللغة الإنجليزية', 'قسم الترجمة', 'قسم العلوم الإنسانية'];
-  final List<String> _divisions = ['الشعبة أ', 'الشعبة ب', 'الشعبة ج', 'الشعبة د'];
-
-  Future<void> _pickFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg', 'txt', 'doc', 'docx', 'mp4', 'mp3'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        setState(() {
-          _selectedFile = File(result.files.single.path!);
-          _fileName = 'الملف المختار: ${result.files.single.name}';
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل في اختيار الملف: $e')),
-      );
-    }
-  }
 
   Future<void> _uploadContent() async {
     if (_titleController.text.isEmpty ||
-        _selectedFile == null ||
-        _descriptionController.text.isEmpty ||
-        _selectedDepartment == null ||
-        _selectedDivision == null) {
+        _fileUrlController.text.isEmpty ||
+        _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى إدخال جميع الحقول واختيار ملف')),
+        SnackBar(content: Text('يرجى إدخال جميع الحقول')),
       );
       return;
     }
@@ -65,10 +33,8 @@ class _UploadScreenState extends State<UploadScreen> {
     try {
       final success = await widget.apiService.uploadContent(
         title: _titleController.text,
-        file: _selectedFile!,
+        fileUrl: _fileUrlController.text,
         uploadedBy: widget.user.username,
-        department: _selectedDepartment!,
-        division: _selectedDivision!,
         description: _descriptionController.text,
       );
 
@@ -80,12 +46,7 @@ class _UploadScreenState extends State<UploadScreen> {
         // مسح الحقول
         _titleController.clear();
         _descriptionController.clear();
-        setState(() {
-          _selectedFile = null;
-          _fileName = 'لم يتم اختيار ملف';
-          _selectedDepartment = null;
-          _selectedDivision = null;
-        });
+        _fileUrlController.clear();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,13 +61,13 @@ class _UploadScreenState extends State<UploadScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('رفع محتوى جديد'),
+        title: Text('إضافة محتوى جديد'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Text('رفع محتوى', style: Theme.of(context).textTheme.displayMedium),
+            Text('إضافة محتوى من رابط', style: Theme.of(context).textTheme.displayMedium),
             SizedBox(height: 30),
             Container(
               padding: EdgeInsets.all(16),
@@ -135,51 +96,17 @@ class _UploadScreenState extends State<UploadScreen> {
                   ),
                   SizedBox(height: 16),
 
-                  // اختيار القسم
-                  DropdownButtonFormField<String>(
-                    value: _selectedDepartment,
+                  // حقل رابط الملف
+                  TextField(
+                    controller: _fileUrlController,
                     decoration: InputDecoration(
-                      labelText: 'القسم *',
+                      labelText: 'رابط الملف من Supabase Storage *',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      prefixIcon: Icon(Icons.category),
+                      prefixIcon: Icon(Icons.link),
+                      hintText: 'https://hsgqgjkrbmkaxwhnktfv.supabase.co/storage/v1/object/public/content/filename.pdf',
                     ),
-                    items: _departments.map((String department) {
-                      return DropdownMenuItem<String>(
-                        value: department,
-                        child: Text(department),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedDepartment = newValue;
-                      });
-                    },
-                  ),
-                    SizedBox(height: 16),
-
-                  // اختيار الشعبة
-                  DropdownButtonFormField<String>(
-                    value: _selectedDivision,
-                    decoration: InputDecoration(
-                      labelText: 'الشعبة *',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      prefixIcon: Icon(Icons.group),
-                    ),
-                    items: _divisions.map((String division) {
-                      return DropdownMenuItem<String>(
-                        value: division,
-                        child: Text(division),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedDivision = newValue;
-                      });
-                    },
                   ),
                   SizedBox(height: 16),
 
@@ -195,34 +122,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     ),
                     maxLines: 3,
                   ),
-                  SizedBox(height: 16),
-
-                  // زر اختيار الملف
-                  ElevatedButton(
-                    onPressed: _pickFile,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.attach_file),
-                        SizedBox(width: 8),
-                        Text('اختيار ملف'),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-
-                  // اسم الملف المختار
-                  Text(
-                    _fileName,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _selectedFile != null ? Colors.green : Colors.grey,
-                    ),
-                  ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
 
                   // زر الرفع
                   ElevatedButton(
@@ -234,12 +134,32 @@ class _UploadScreenState extends State<UploadScreen> {
                             children: [
                               Icon(Icons.cloud_upload),
                               SizedBox(width: 8),
-                              Text('رفع المحتوى'),
+                              Text('إضافة المحتوى'),
                             ],
                           ),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                       backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
+                  // معلومات مساعدة
+                  Card(
+                    color: Colors.blue[50],
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('كيفية الحصول على الرابط:', 
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          SizedBox(height: 8),
+                          Text('1. ارفع الملف إلى Supabase Storage'),
+                          Text('2. انسخ الرابط العام للملف'),
+                          Text('3. الصق الرابط في الحقل أعلاه'),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -255,6 +175,7 @@ class _UploadScreenState extends State<UploadScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _fileUrlController.dispose();
     super.dispose();
   }
 }

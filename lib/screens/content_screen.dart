@@ -21,11 +21,6 @@ class _ContentScreenState extends State<ContentScreen> {
   bool _isLoading = false;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  String _selectedDepartment = 'الكل';
-  String _selectedDivision = 'الكل';
-
-  final List<String> _departments = ['الكل', 'قسم اللغة العربية', 'قسم اللغة الإنجليزية', 'قسم الترجمة', 'قسم العلوم الإنسانية'];
-  final List<String> _divisions = ['الكل', 'الشعبة أ', 'الشعبة ب', 'الشعبة ج', 'الشعبة د'];
 
   @override
   void initState() {
@@ -36,7 +31,7 @@ class _ContentScreenState extends State<ContentScreen> {
   Future<void> _loadContent() async {
     setState(() => _isLoading = true);
     try {
-      final content = await widget.apiService.getContent('', '');
+      final content = await widget.apiService.getContent();
       setState(() => _content = content);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +68,9 @@ class _ContentScreenState extends State<ContentScreen> {
       );
     } else {
       // للملفات الأخرى، فتح في متصفح
-      // يمكن استخدام package:url_launcher
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('يمكنك فتح الملف من خلال المتصفح')),
+      );
     }
   }
 
@@ -99,11 +96,7 @@ class _ContentScreenState extends State<ContentScreen> {
 
     if (confirmed == true) {
       try {
-        final success = await widget.apiService.deleteContent(
-          item.id,
-          '',
-          '',
-        );
+        final success = await widget.apiService.deleteContent(item.id);
         
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -139,17 +132,15 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   List<Content> _getFilteredContent() {
+    final searchTerm = _searchController.text.toLowerCase();
+    if (searchTerm.isEmpty) {
+      return _content;
+    }
+    
     return _content.where((item) {
-      final matchesDepartment = _selectedDepartment == 'الكل' || 
-          item.department == _selectedDepartment;
-      final matchesDivision = _selectedDivision == 'الكل' || 
-          item.division == _selectedDivision;
-      final searchTerm = _searchController.text.toLowerCase();
-      final matchesSearch = searchTerm.isEmpty ||
-          item.title.toLowerCase().contains(searchTerm) ||
-          item.description.toLowerCase().contains(searchTerm);
-
-      return matchesDepartment && matchesDivision && matchesSearch;
+      return item.title.toLowerCase().contains(searchTerm) ||
+             item.description.toLowerCase().contains(searchTerm) ||
+             item.uploadedBy.toLowerCase().contains(searchTerm);
     }).toList();
   }
 
@@ -172,60 +163,6 @@ class _ContentScreenState extends State<ContentScreen> {
             Text('المكتبة الرقمية - المحتوى المتاح', 
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             SizedBox(height: 20),
-            
-            // فلاتر القسم والشعبة
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDepartment,
-                    decoration: InputDecoration(
-                      labelText: 'القسم',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
-                    items: _departments.map((String department) {
-                      return DropdownMenuItem<String>(
-                        value: department,
-                        child: Text(department, style: TextStyle(color: Colors.white)),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedDepartment = newValue!;
-                      });
-                    },
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDivision,
-                    decoration: InputDecoration(
-                      labelText: 'الشعبة',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
-                    items: _divisions.map((String division) {
-                      return DropdownMenuItem<String>(
-                        value: division,
-                        child: Text(division, style: TextStyle(color: Colors.white)),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedDivision = newValue!;
-                      });
-                    },
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
             
             // شريط البحث
             TextField(
@@ -283,18 +220,13 @@ class _ContentScreenState extends State<ContentScreen> {
                                 'لا يوجد محتوى متاح حالياً',
                                 style: TextStyle(color: Colors.white70, fontSize: 16),
                               ),
-                              if (_searchController.text.isNotEmpty || 
-                                  _selectedDepartment != 'الكل' || 
-                                  _selectedDivision != 'الكل')
+                              if (_searchController.text.isNotEmpty)
                                 TextButton(
                                   onPressed: () {
                                     _searchController.clear();
-                                    setState(() {
-                                      _selectedDepartment = 'الكل';
-                                      _selectedDivision = 'الكل';
-                                    });
+                                    setState(() {});
                                   },
-                                  child: Text('إعادة تعيين الفلاتر', style: TextStyle(color: Colors.blue)),
+                                  child: Text('إعادة تعيين البحث', style: TextStyle(color: Colors.blue)),
                                 ),
                             ],
                           ),
@@ -329,10 +261,6 @@ class _ContentScreenState extends State<ContentScreen> {
                                               Text(item.title, 
                                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
                                               SizedBox(height: 4),
-                                              if (item.department.isNotEmpty)
-                                                Text('القسم: ${item.department}', style: TextStyle(color: Colors.white70)),
-                                              if (item.division.isNotEmpty)
-                                                Text('الشعبة: ${item.division}', style: TextStyle(color: Colors.white70)),
                                             ],
                                           ),
                                         ),
@@ -418,5 +346,12 @@ class _ContentScreenState extends State<ContentScreen> {
         tooltip: 'تحديث المحتوى',
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 }

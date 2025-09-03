@@ -7,7 +7,6 @@ import 'package:alson_education/models/message.dart';
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // دالة للتحقق من الاتصال
   Future<bool> checkConnection() async {
     try {
       await supabase.from('users').select().limit(1);
@@ -20,10 +19,6 @@ class ApiService {
 
   Future<app_user.AppUser?> login(String code, String password) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       final response = await supabase
           .from('users')
           .select()
@@ -31,24 +26,14 @@ class ApiService {
           .eq('password', password)
           .single();
 
-      if (response != null) {
-        return app_user.AppUser.fromJson(response);
-      } else {
-        throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
-      }
+      return app_user.AppUser.fromJson(response);
     } catch (e) {
-      print('Login error: $e');
-      throw Exception('فشل في تسجيل الدخول: $e');
+      throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
     }
   }
 
-  Future<List<Content>> getContent(String department, String division) async {
+  Future<List<Content>> getContent() async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
-      // جلب جميع المحتويات بدون تصفية بالقسم أو الشعبة
       final response = await supabase
           .from('content')
           .select()
@@ -56,80 +41,37 @@ class ApiService {
 
       return response.map((item) => Content.fromJson(item)).toList();
     } catch (e) {
-      print('Get content error: $e');
       throw Exception('فشل في جلب المحتوى: $e');
     }
   }
 
   Future<bool> uploadContent({
     required String title,
-    required File file,
+    required String fileUrl,
     required String uploadedBy,
-    required String department,
-    required String division,
     required String description,
   }) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
-      // إنشاء اسم ملف فريد
-      final fileExtension = file.path.split('.').last.toLowerCase();
-      final fileName = 'content_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
-      
-      print('بدء رفع الملف: $fileName');
-
-      // رفع الملف إلى Supabase Storage
-      try {
-        await supabase.storage
-            .from('content')
-            .upload(fileName, file);
-        print('تم رفع الملف بنجاح');
-      } catch (uploadError) {
-        print('خطأ في رفع الملف: $uploadError');
-        throw Exception('فشل في رفع الملف: $uploadError');
-      }
-
-      // الحصول على رابط الملف العام
-      final fileUrl = supabase.storage
-          .from('content')
-          .getPublicUrl(fileName);
-
-      print('رابط الملف: $fileUrl');
-
-      // إضافة بيانات المحتوى إلى الجدول
-      try {
-        await supabase.from('content').insert({
-          'title': title,
-          'file_path': fileUrl,
-          'file_type': fileExtension,
-          'file_size': file.lengthSync().toString(),
-          'uploaded_by': uploadedBy,
-          'department': department,
-          'division': division,
-          'description': description,
-          'upload_date': DateTime.now().toIso8601String(),
-        });
-        print('تم إضافة بيانات المحتوى إلى الجدول');
-      } catch (dbError) {
-        print('خطأ في إضافة البيانات: $dbError');
-        throw Exception('فشل في إضافة البيانات: $dbError');
-      }
+      await supabase.from('content').insert({
+        'title': title,
+        'file_path': fileUrl,
+        'file_type': fileUrl.split('.').last.toLowerCase(),
+        'file_size': '0',
+        'uploaded_by': uploadedBy,
+        'department': '',
+        'division': '',
+        'description': description,
+        'upload_date': DateTime.now().toIso8601String(),
+      });
 
       return true;
     } catch (e) {
-      print('Upload content error: $e');
       throw Exception('فشل في رفع المحتوى: $e');
     }
   }
 
-  Future<bool> deleteContent(String id, String department, String division) async {
+  Future<bool> deleteContent(String id) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       await supabase
           .from('content')
           .delete()
@@ -137,51 +79,42 @@ class ApiService {
 
       return true;
     } catch (e) {
-      print('Delete content error: $e');
       throw Exception('فشل في حذف المحتوى: $e');
     }
   }
 
-  Future<List<Message>> getChatMessages(String department, String division) async {
+  Future<List<Message>> getChatMessages() async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
-      // جلب جميع الرسائل بدون تصفية بالقسم أو الشعبة
       final response = await supabase
           .from('messages')
-          .select()
+          .select('*, user:users(username)')
           .order('timestamp', ascending: true);
 
-      return response.map((item) => Message.fromJson(item)).toList();
+      return response.map((item) => Message.fromJson({
+        'id': item['id'],
+        'content': item['content'],
+        'sender_id': item['sender_id'],
+        'username': item['user']['username'] ?? 'مستخدم',
+        'department': item['department'] ?? '',
+        'division': item['division'] ?? '',
+        'timestamp': item['timestamp'],
+      })).toList();
     } catch (e) {
-      print('Get messages error: $e');
       throw Exception('فشل في جلب الرسائل: $e');
     }
   }
 
   Future<bool> sendMessage({
     required String senderId,
-    required String department,
-    required String division,
     required String content,
   }) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
-      // التحقق من صلاحية المستخدم لإرسال الرسائل
+      // التحقق من صلاحية المستخدم
       final userResponse = await supabase
           .from('users')
           .select('role')
           .eq('code', senderId)
           .single();
-
-      if (userResponse == null) {
-        throw Exception('خطأ في التحقق من صلاحية المستخدم');
-      }
 
       final userRole = userResponse['role'];
       if (userRole != 'admin') {
@@ -191,31 +124,25 @@ class ApiService {
       await supabase.from('messages').insert({
         'content': content,
         'sender_id': senderId,
-        'department': department,
-        'division': division,
+        'department': '',
+        'division': '',
         'timestamp': DateTime.now().toIso8601String(),
       });
 
       return true;
     } catch (e) {
-      print('Send message error: $e');
       throw Exception('فشل في إرسال الرسالة: $e');
     }
   }
 
   Future<List<app_user.AppUser>> getUsers() async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       final response = await supabase
           .from('users')
           .select();
 
       return response.map((item) => app_user.AppUser.fromJson(item)).toList();
     } catch (e) {
-      print('Get users error: $e');
       throw Exception('فشل في جلب المستخدمين: $e');
     }
   }
@@ -223,38 +150,27 @@ class ApiService {
   Future<bool> addUser({
     required String code,
     required String username,
-    required String department,
-    required String division,
     required String role,
     required String password,
   }) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       await supabase.from('users').insert({
         'code': code,
         'username': username,
-        'department': department,
-        'division': division,
+        'department': '',
+        'division': '',
         'role': role,
         'password': password,
       });
 
       return true;
     } catch (e) {
-      print('Add user error: $e');
       throw Exception('فشل في إضافة المستخدم: $e');
     }
   }
 
   Future<bool> deleteUser(String code) async {
     try {
-      if (!await checkConnection()) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       await supabase
           .from('users')
           .delete()
@@ -262,7 +178,6 @@ class ApiService {
 
       return true;
     } catch (e) {
-      print('Delete user error: $e');
       throw Exception('فشل في حذف المستخدم: $e');
     }
   }
