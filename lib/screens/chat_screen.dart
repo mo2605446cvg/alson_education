@@ -35,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadMessages() async {
     try {
-      final messages = await widget.apiService.getChatMessages('', '');
+      final messages = await widget.apiService.getChatMessages();
       setState(() {
         _messages = messages;
       });
@@ -74,8 +74,6 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final success = await widget.apiService.sendMessage(
         senderId: widget.user.code,
-        department: widget.user.department,
-        division: widget.user.division,
         content: _messageController.text,
       );
 

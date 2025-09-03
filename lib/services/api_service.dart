@@ -83,57 +83,50 @@ class ApiService {
     }
   }
 
-  Future<List<Message>> getChatMessages() async {
-    try {
-      final response = await supabase
-          .from('messages')
-          .select('*, user:users(username)')
-          .order('timestamp', ascending: true);
+// في قسم دوال المحادثة في api_service.dart
+Future<List<Message>> getChatMessages() async {
+  try {
+    final response = await supabase
+        .from('messages')
+        .select()
+        .order('timestamp', ascending: true);
 
-      return response.map((item) => Message.fromJson({
-        'id': item['id'],
-        'content': item['content'],
-        'sender_id': item['sender_id'],
-        'username': item['user']['username'] ?? 'مستخدم',
-        'department': item['department'] ?? '',
-        'division': item['division'] ?? '',
-        'timestamp': item['timestamp'],
-      })).toList();
-    } catch (e) {
-      throw Exception('فشل في جلب الرسائل: $e');
-    }
+    return response.map((item) => Message.fromJson(item)).toList();
+  } catch (e) {
+    throw Exception('فشل في جلب الرسائل: $e');
   }
+}
 
-  Future<bool> sendMessage({
-    required String senderId,
-    required String content,
-  }) async {
-    try {
-      // التحقق من صلاحية المستخدم
-      final userResponse = await supabase
-          .from('users')
-          .select('role')
-          .eq('code', senderId)
-          .single();
+Future<bool> sendMessage({
+  required String senderId,
+  required String content,
+}) async {
+  try {
+    // التحقق من صلاحية المستخدم لإرسال الرسائل
+    final userResponse = await supabase
+        .from('users')
+        .select('role')
+        .eq('code', senderId)
+        .single();
 
-      final userRole = userResponse['role'];
-      if (userRole != 'admin') {
-        throw Exception('غير مسموح للمستخدمين العاديين بإرسال الرسائل');
-      }
-
-      await supabase.from('messages').insert({
-        'content': content,
-        'sender_id': senderId,
-        'department': '',
-        'division': '',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-
-      return true;
-    } catch (e) {
-      throw Exception('فشل في إرسال الرسالة: $e');
+    final userRole = userResponse['role'];
+    if (userRole != 'admin') {
+      throw Exception('غير مسموح للمستخدمين العاديين بإرسال الرسائل');
     }
+
+    await supabase.from('messages').insert({
+      'content': content,
+      'sender_id': senderId,
+      'department': '',
+      'division': '',
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+
+    return true;
+  } catch (e) {
+    throw Exception('فشل في إرسال الرسالة: $e');
   }
+}
 
   Future<List<app_user.AppUser>> getUsers() async {
     try {
