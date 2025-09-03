@@ -32,7 +32,37 @@ class _ContentScreenState extends State<ContentScreen> {
     setState(() => _isLoading = true);
     try {
       final content = await widget.apiService.getContent();
-      setState(() => _content = content);
+      
+      // تحميل أسماء المستخدمين لكل محتوى
+      final usersMap = <String, String>{};
+      for (var item in content) {
+        if (item.uploadedBy.isNotEmpty && !usersMap.containsKey(item.uploadedBy)) {
+          try {
+            final user = await widget.apiService.getUserByCode(item.uploadedBy);
+            usersMap[item.uploadedBy] = user.username;
+          } catch (e) {
+            usersMap[item.uploadedBy] = 'مستخدم';
+          }
+        }
+      }
+      
+      // تحديث المحتوى بأسماء المستخدمين
+      final updatedContent = content.map((item) {
+        return Content(
+          id: item.id,
+          title: item.title,
+          filePath: item.filePath,
+          fileType: item.fileType,
+          fileSize: item.fileSize,
+          uploadedBy: usersMap[item.uploadedBy] ?? item.uploadedBy,
+          uploadDate: item.uploadDate,
+          description: item.description,
+          department: item.department,
+          division: item.division,
+        );
+      }).toList();
+      
+      setState(() => _content = updatedContent);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل في جلب المحتوى: $e')),
@@ -67,7 +97,6 @@ class _ContentScreenState extends State<ContentScreen> {
         ),
       );
     } else {
-      // للملفات الأخرى، فتح في متصفح
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('يمكنك فتح الملف من خلال المتصفح')),
       );
@@ -164,7 +193,6 @@ class _ContentScreenState extends State<ContentScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             SizedBox(height: 20),
             
-            // شريط البحث
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -190,7 +218,6 @@ class _ContentScreenState extends State<ContentScreen> {
             ),
             SizedBox(height: 10),
             
-            // إحصائيات
             Card(
               color: Colors.grey[800],
               child: Padding(

@@ -7,6 +7,7 @@ import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/guest_screen.dart';
 import 'package:alson_education/screens/admin_dashboard.dart';
 import 'package:alson_education/services/api_service.dart';
+import 'package:alson_education/services/notification_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
 
 Future<void> main() async {
@@ -14,7 +15,7 @@ Future<void> main() async {
   
   await Supabase.initialize(
     url: 'https://hsgqgjkrbmkaxwhnktfv.supabase.co',
-    anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM1NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM1NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
   );
 
   runApp(AlalsunApp());
@@ -27,12 +28,14 @@ class AlalsunApp extends StatefulWidget {
 
 class _AlalsunAppState extends State<AlalsunApp> {
   final ApiService apiService = ApiService();
+  final NotificationService notificationService = NotificationService();
   app_user.AppUser? currentUser;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    notificationService.init();
   }
 
   Future<void> _loadUserData() async {
@@ -48,6 +51,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
   void _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
+    notificationService.clearNotifications();
     setState(() {
       currentUser = null;
     });
@@ -184,11 +188,26 @@ class _AlalsunAppState extends State<AlalsunApp> {
       ),
       home: currentUser != null
           ? (currentUser!.role == 'admin'
-              ? HomeScreen(user: currentUser!, apiService: apiService, onLogout: _logout)
+              ? HomeScreen(
+                  user: currentUser!, 
+                  apiService: apiService, 
+                  onLogout: _logout,
+                  notificationService: notificationService,
+                )
               : (currentUser!.role == 'guest'
                   ? GuestScreen(user: currentUser!, onLogout: _logout)
-                  : HomeScreen(user: currentUser!, apiService: apiService, onLogout: _logout)))
-          : LoginScreen(apiService: apiService, onLogin: _login, onLoginAsGuest: _loginAsGuest),
+                  : HomeScreen(
+                      user: currentUser!, 
+                      apiService: apiService, 
+                      onLogout: _logout,
+                      notificationService: notificationService,
+                    )))
+          : LoginScreen(
+              apiService: apiService, 
+              onLogin: _login, 
+              onLoginAsGuest: _loginAsGuest,
+            ),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
