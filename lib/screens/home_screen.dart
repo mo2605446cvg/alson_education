@@ -1,4 +1,3 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:alson_education/services/api_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
@@ -149,6 +148,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildBadge(int count) {
+    return Stack(
+      children: [
+        IconButton(
+          icon: Icon(Icons.notifications),
+          onPressed: () {
+            _onItemTapped(5);
+          },
+        ),
+        if (count > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              constraints: BoxConstraints(
+                minWidth: 14,
+                minHeight: 14,
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,17 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         actions: [
           ValueListenableBuilder<int>(
-            valueListenable: ValueNotifier<int>(widget.notificationService.getUnreadCount()),
+            valueListenable: widget.notificationService.messageCount,
             builder: (context, count, child) {
-              return Badge.count(
-                count: count,
-                child: IconButton(
-                  icon: Icon(Icons.notifications),
-                  onPressed: () {
-                    _onItemTapped(5); // الانتقال لشاشة الإشعارات
-                  },
-                ),
-              );
+              return _buildBadge(widget.notificationService.getUnreadCount());
             },
           ),
           IconButton(
@@ -212,12 +240,39 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           BottomNavigationBarItem(
             icon: ValueListenableBuilder<int>(
-              valueListenable: ValueNotifier<int>(widget.notificationService.getUnreadCount()),
+              valueListenable: widget.notificationService.messageCount,
               builder: (context, count, child) {
-                return Badge.count(
-                  count: count,
-                  child: Icon(Icons.notifications),
-                );
+                if (widget.notificationService.getUnreadCount() > 0) {
+                  return Stack(
+                    children: [
+                      Icon(Icons.notifications),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 14,
+                            minHeight: 14,
+                          ),
+                          child: Text(
+                            widget.notificationService.getUnreadCount().toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                }
+                return Icon(Icons.notifications);
               },
             ),
             label: 'الإشعارات',
