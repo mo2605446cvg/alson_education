@@ -20,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -37,23 +39,42 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    setState(() => _isLoading = true);
-    
+    if (_codeController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'يرجى إدخال جميع الحقول';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
     try {
+      // التحقق من اتصال السيرفر أولاً
+      final isConnected = await widget.apiService.checkServerConnection();
+      if (!isConnected) {
+        setState(() {
+          _errorMessage = 'فشل في الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final user = await widget.apiService.login(
-        _codeController.text,
-        _passwordController.text,
+        _codeController.text.trim(),
+        _passwordController.text.trim(),
       );
       
       if (user != null) {
         widget.onLogin(user);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isLoading = false;
+      });
     }
   }
 
@@ -95,6 +116,31 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 30),
+
+                    // رسالة الخطأ
+                    if (_errorMessage.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error, color: Colors.red),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _errorMessage,
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (_errorMessage.isNotEmpty) SizedBox(height: 20),
+
                     TextField(
                       controller: _codeController,
                       decoration: InputDecoration(
@@ -106,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                       ),
                       textAlign: TextAlign.right,
+                      keyboardType: TextInputType.text,
                     ),
                     SizedBox(height: 20),
                     TextField(
@@ -118,11 +165,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         filled: true,
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.visibility),
-                          onPressed: () {},
+                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
                         ),
                       ),
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       textAlign: TextAlign.right,
                     ),
                     SizedBox(height: 30),
@@ -153,7 +204,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 10),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // يمكن إضافة وظيفة استعادة كلمة المرور لاحقاً
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("يرجى التواصل مع المدير لاستعادة كلمة المرور")),
+                        );
+                      },
                       child: Text("نسيت كلمة المرور؟"),
                     ),
                   ],

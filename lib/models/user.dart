@@ -15,11 +15,11 @@ class AppUser {
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
-      code: json['code'] ?? '',
-      username: json['username'] ?? '',
-      department: json['department'] ?? '',
-      division: json['division'] ?? '',
-      role: json['role'] ?? 'guest',
+      code: json['code']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      department: json['department']?.toString() ?? '',
+      division: json['division']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'user',
     );
   }
 

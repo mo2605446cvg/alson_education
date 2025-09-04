@@ -7,28 +7,39 @@ import 'package:alson_education/models/message.dart';
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  Future<bool> checkConnection() async {
-    try {
-      await supabase.from('users').select().limit(1);
-      return true;
-    } catch (e) {
-      print('Connection error: $e');
-      return false;
-    }
-  }
-
   Future<app_user.AppUser?> login(String code, String password) async {
     try {
+      print('محاولة تسجيل الدخول بالكود: $code');
+      
       final response = await supabase
           .from('users')
           .select()
           .eq('code', code)
           .eq('password', password)
-          .single();
+          .maybeSingle();
 
-      return app_user.AppUser.fromJson(response);
+      if (response != null && response.isNotEmpty) {
+        print('تم العثور على المستخدم: ${response['username']}');
+        return app_user.AppUser.fromJson(response);
+      } else {
+        print('لم يتم العثور على مستخدم بالبيانات المدخلة');
+        throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
+      }
     } catch (e) {
-      throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
+      print('خطأ في تسجيل الدخول: $e');
+      
+      // معالجة أنواع الأخطاء المختلفة
+      if (e is PostgrestException) {
+        if (e.code == 'PGRST116') {
+          throw Exception('فشل في تسجيل الدخول: بيانات غير صحيحة');
+        } else {
+          throw Exception('خطأ في الاتصال بالخادم: ${e.message}');
+        }
+      } else if (e is SocketException) {
+        throw Exception('فشل في الاتصال بالإنترنت');
+      } else {
+        throw Exception('فشل في تسجيل الدخول: $e');
+      }
     }
   }
 
@@ -234,6 +245,21 @@ class ApiService {
       return true;
     } catch (e) {
       throw Exception('فشل في حذف المستخدم: $e');
+    }
+  }
+
+  // دالة للتحقق من اتصال السيرفر
+  Future<bool> checkServerConnection() async {
+    try {
+      final response = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
+
+      return true;
+    } catch (e) {
+      print('فشل في الاتصال بالسيرفر: $e');
+      return false;
     }
   }
 }
