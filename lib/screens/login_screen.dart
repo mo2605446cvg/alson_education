@@ -52,16 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // التحقق من اتصال السيرفر أولاً
-      final isConnected = await widget.apiService.checkServerConnection();
-      if (!isConnected) {
-        setState(() {
-          _errorMessage = 'فشل في الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final user = await widget.apiService.login(
         _codeController.text.trim(),
         _passwordController.text.trim(),
@@ -71,8 +61,20 @@ class _LoginScreenState extends State<LoginScreen> {
         widget.onLogin(user);
       }
     } catch (e) {
+      String errorMessage = 'فشل في تسجيل الدخول';
+      
+      if (e.toString().contains('كود المستخدم غير صحيح')) {
+        errorMessage = 'كود المستخدم غير صحيح';
+      } else if (e.toString().contains('كلمة المرور غير صحيحة')) {
+        errorMessage = 'كلمة المرور غير صحيحة';
+      } else if (e.toString().contains('الاتصال')) {
+        errorMessage = 'فشل في الاتصال بالسيرفر. يرجى التحقق من الإنترنت';
+      } else if (e.toString().contains('قاعدة البيانات')) {
+        errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً';
+      }
+      
       setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _errorMessage = errorMessage;
         _isLoading = false;
       });
     }
@@ -205,7 +207,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(height: 10),
                     TextButton(
                       onPressed: () {
-                        // يمكن إضافة وظيفة استعادة كلمة المرور لاحقاً
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("يرجى التواصل مع المدير لاستعادة كلمة المرور")),
                         );

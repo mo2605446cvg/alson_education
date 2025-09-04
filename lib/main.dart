@@ -13,10 +13,15 @@ import 'package:alson_education/models/user.dart' as app_user;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Supabase.initialize(
-    url: 'https://hsgqgjkrbmkaxwhnktfv.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM5NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
-  );
+  try {
+    await Supabase.initialize(
+      url: 'https://hsgqgjkrbmkaxwhnktfv.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM5NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
+    );
+    print('✅ Supabase initialized successfully');
+  } catch (e) {
+    print('❌ Failed to initialize Supabase: $e');
+  }
 
   runApp(AlalsunApp());
 }
@@ -35,6 +40,23 @@ class _AlalsunAppState extends State<AlalsunApp> {
   void initState() {
     super.initState();
     _loadUserData();
+    _checkConnection();
+  }
+
+  Future<void> _checkConnection() async {
+    try {
+      final isConnected = await apiService.checkSupabaseConnection();
+      if (!isConnected) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل في الاتصال بالسيرفر. يرجى التحقق من الإنترنت'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      print('خطأ في فحص الاتصال: $e');
+    }
   }
 
   Future<void> _loadUserData() async {
