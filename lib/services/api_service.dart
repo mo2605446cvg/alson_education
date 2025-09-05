@@ -9,9 +9,9 @@ class ApiService {
   // دالة للتحقق من اتصال Supabase
   Future<bool> checkSupabaseConnection() async {
     try {
-      // طريقة أبسط للتحقق من الاتصال
-      final response = await supabase.auth.getSession();
-      return response.session != null;
+      // استخدام الطريقة الصحيحة للتحقق من الاتصال في الإصدارات الحديثة
+      final session = supabase.auth.currentSession;
+      return session != null;
     } catch (e) {
       print('❌ فشل في الاتصال بـ Supabase: $e');
       return false;
