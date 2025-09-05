@@ -6,12 +6,12 @@ import 'package:alson_education/models/message.dart';
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // دالة للتحقق من اتصال Supabase
+  // دالة للتحقق من اتصال Supabase - الإصدار المصحح
   Future<bool> checkSupabaseConnection() async {
     try {
       // طريقة أبسط للتحقق من الاتصال
-      final response = await supabase.auth.getSession();
-      return response.session != null;
+      final response = await supabase.from('users').select('count').limit(1);
+      return response != null;
     } catch (e) {
       print('❌ فشل في الاتصال بـ Supabase: $e');
       return false;
@@ -322,6 +322,16 @@ class ApiService {
           .eq('code', code);
 
       return response.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // دالة جديدة للتحقق من صحة التوكن
+  Future<bool> validateAuth() async {
+    try {
+      final session = supabase.auth.currentSession;
+      return session != null && !session.isExpired;
     } catch (e) {
       return false;
     }
