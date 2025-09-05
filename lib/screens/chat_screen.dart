@@ -64,6 +64,17 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     });
   }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   // أضف دالة لفتح الوسائط
   void _openMedia(Message message) {
     final isImage = message.content.contains('[image]');
@@ -92,16 +103,6 @@ class _ChatScreenState extends State<ChatScreen> {
         duration: Duration(seconds: 2),
       ),
     );
-
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
   }
 
   Future<void> _sendMessage() async {
@@ -186,6 +187,38 @@ class _ChatScreenState extends State<ChatScreen> {
     } finally {
       setState(() => _isSending = false);
     }
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return timestamp;
+    }
+  }
+
+  Widget _buildReactionButton(String emoji, Message message) {
+    return GestureDetector(
+      onTap: () => _addReaction(message, emoji),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.grey[700],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(emoji, style: TextStyle(fontSize: 12)),
+      ),
+    );
+  }
+
+  Future<void> _addReaction(Message message, String emoji) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('تم إضافة التفاعل $emoji للرسالة'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   Widget _buildMessageBubble(Message message, bool isMe) {
@@ -302,38 +335,6 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildReactionButton(String emoji, Message message) {
-    return GestureDetector(
-      onTap: () => _addReaction(message, emoji),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.grey[700],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(emoji, style: TextStyle(fontSize: 12)),
-      ),
-    );
-  }
-
-  Future<void> _addReaction(Message message, String emoji) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم إضافة التفاعل $emoji للرسالة'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  String _formatTimestamp(String timestamp) {
-    try {
-      final dateTime = DateTime.parse(timestamp);
-      return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return timestamp;
-    }
   }
 
   Widget _buildMessageInput() {
