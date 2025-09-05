@@ -22,12 +22,6 @@ class ApiService {
     try {
       print('🔐 محاولة تسجيل الدخول بالكود: $code');
 
-      // التحقق من اتصال Supabase أولاً
-      final isConnected = await checkSupabaseConnection();
-      if (!isConnected) {
-        throw Exception('فشل في الاتصال بالسيرفر');
-      }
-
       // البحث عن المستخدم بالكود فقط أولاً
       final userResponse = await supabase
           .from('users')
@@ -224,7 +218,7 @@ class ApiService {
     }
   }
 
-  // رفع محتوى
+  // رفع محتوى - الإصدار المحسن
   Future<bool> uploadContent({
     required String title,
     required String fileUrl,
@@ -234,24 +228,65 @@ class ApiService {
     try {
       print('📤 رفع محتوى: $title');
       
-      await supabase.from('content').insert({
+      // التحقق من صحة الرابط
+      if (!_isValidUrl(fileUrl)) {
+        throw Exception('رابط الملف غير صحيح');
+      }
+
+      // البحث عن المستخدم بالاسم للحصول على الكود
+      final userResponse = await supabase
+          .from('users')
+          .select('code')
+          .eq('username', uploadedBy)
+          .maybeSingle();
+
+      String uploadedByCode = userResponse?['code'] ?? uploadedBy;
+
+      // إدخال البيانات مع معالجة الأخطاء
+      final response = await supabase.from('content').insert({
         'title': title,
         'file_path': fileUrl,
         'file_type': fileUrl.split('.').last.toLowerCase(),
         'file_size': '0',
-        'uploaded_by': uploadedBy,
+        'uploaded_by': uploadedByCode,
         'department': '',
         'division': '',
         'description': description,
         'upload_date': DateTime.now().toIso8601String(),
-      });
+      }).select();
 
-      print('✅ تم رفع المحتوى بنجاح');
-      return true;
+      if (response != null && response.isNotEmpty) {
+        print('✅ تم رفع المحتوى بنجاح');
+        return true;
+      } else {
+        throw Exception('فشل في إضافة المحتوى إلى قاعدة البيانات');
+      }
 
     } catch (e) {
       print('❌ خطأ في رفع المحتوى: $e');
-      throw Exception('فشل في رفع المحتوى: $e');
+      
+      // معالجة أخطاء محددة
+      if (e is PostgrestException) {
+        if (e.code == '23503') {
+          throw Exception('المستخدم غير موجود في النظام. يرجى استخدام اسم مستخدم صحيح');
+        } else if (e.code == '23505') {
+          throw Exception('هذا المحتوى موجود مسبقاً');
+        } else {
+          throw Exception('خطأ في قاعدة البيانات: ${e.message}');
+        }
+      }
+      
+      throw Exception('فشل في رفع المحتوى: ${e.toString()}');
+    }
+  }
+
+  // التحقق من صحة الرابط
+  bool _isValidUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      return uri.isAbsolute && (uri.scheme == 'http' || uri.scheme == 'https');
+    } catch (e) {
+      return false;
     }
   }
 

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alson_education/services/api_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
-import 'package:alson_education/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final ApiService apiService;
@@ -105,16 +104,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.network(
-                      "https://via.placeholder.com/150?text=Alson+Logo",
+                    // شعار الأكاديمية
+                    Container(
                       width: 120,
                       height: 120,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(60),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.school,
+                        size: 60,
+                        color: Colors.white,
+                      ),
                     ),
                     SizedBox(height: 20),
                     Text(
                       "أكاديمية الألسن",
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "منصة التعلم الإلكتروني",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[700],
+                        fontFamily: 'Cairo',
                       ),
                     ),
                     SizedBox(height: 30),
@@ -136,6 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 _errorMessage,
                                 style: TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ],
