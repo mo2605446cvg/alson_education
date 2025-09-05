@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alson_education/screens/login_screen.dart';
 import 'package:alson_education/screens/home_screen.dart';
 import 'package:alson_education/screens/guest_screen.dart';
-import 'package:alson_education/screens/admin_dashboard.dart';
 import 'package:alson_education/services/api_service.dart';
 import 'package:alson_education/services/notification_service.dart';
 import 'package:alson_education/models/user.dart' as app_user;
@@ -16,7 +15,7 @@ Future<void> main() async {
   try {
     await Supabase.initialize(
       url: 'https://hsgqgjkrbmkaxwhnktfv.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM5NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzZ3FnamtyYm1rYXh3aG5rdGZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTM1NDQsImV4cCI6MjA3MTc4OTU0NH0.WO3CQv-iHaxAin8pbS9h0CmDzfFC4Kb4sTaaYbBDM_Q',
     );
     print('✅ Supabase initialized successfully');
   } catch (e) {
@@ -35,6 +34,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
   final ApiService apiService = ApiService();
   final NotificationService notificationService = NotificationService();
   app_user.AppUser? currentUser;
+  String? _connectionError;
 
   @override
   void initState() {
@@ -47,15 +47,18 @@ class _AlalsunAppState extends State<AlalsunApp> {
     try {
       final isConnected = await apiService.checkSupabaseConnection();
       if (!isConnected) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل في الاتصال بالسيرفر. يرجى التحقق من الإنترنت'),
-            duration: Duration(seconds: 5),
-          ),
-        );
+        setState(() {
+          _connectionError = 'فشل في الاتصال بالسيرفر. يرجى التحقق من الإنترنت';
+        });
+      } else {
+        setState(() {
+          _connectionError = null;
+        });
       }
     } catch (e) {
-      print('خطأ في فحص الاتصال: $e');
+      setState(() {
+        _connectionError = 'خطأ في الاتصال: $e';
+      });
     }
   }
 
@@ -83,6 +86,7 @@ class _AlalsunAppState extends State<AlalsunApp> {
     await prefs.setString('user', json.encode(user.toJson()));
     setState(() {
       currentUser = user;
+      _connectionError = null; // مسح رسالة الخطأ عند تسجيل الدخول الناجح
     });
   }
 
@@ -117,23 +121,19 @@ class _AlalsunAppState extends State<AlalsunApp> {
           displayLarge: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo-Bold',
             color: Color(0xFF2196F3),
           ),
           displayMedium: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo-Bold',
             color: Color(0xFF1976D2),
           ),
           bodyLarge: TextStyle(
             fontSize: 18,
-            fontFamily: 'Cairo',
             color: Colors.black87,
           ),
           bodyMedium: TextStyle(
             fontSize: 16,
-            fontFamily: 'Cairo',
             color: Colors.grey[700],
           ),
         ),
@@ -141,7 +141,6 @@ class _AlalsunAppState extends State<AlalsunApp> {
           backgroundColor: Color(0xFF2196F3),
           foregroundColor: Colors.white,
           titleTextStyle: TextStyle(
-            fontFamily: 'Cairo-Bold',
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -154,81 +153,61 @@ class _AlalsunAppState extends State<AlalsunApp> {
           ),
         ),
       ),
-      darkTheme: ThemeData.dark().copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: Color(0xFF2196F3),
-          primaryContainer: Color(0xFF64B5F6),
-          secondary: Color(0xFF4FC3F7),
-          background: Color(0xFF121212),
-          surface: Color(0xFF1E1E1E),
-          onPrimary: Colors.white,
-          onSurface: Colors.white,
-        ),
-        scaffoldBackgroundColor: Color(0xFF121212),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF2196F3),
-          foregroundColor: Colors.white,
-          titleTextStyle: TextStyle(
-            fontFamily: 'Cairo-Bold',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-          centerTitle: true,
-        ),
-        textTheme: TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo-Bold',
-            color: Colors.white,
-          ),
-          displayMedium: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo-Bold',
-            color: Colors.white,
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 18,
-            fontFamily: 'Cairo',
-            color: Colors.white,
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 16,
-            fontFamily: 'Cairo',
-            color: Colors.grey[300],
-          ),
-        ),
-        cardTheme: CardTheme(
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          color: Color(0xFF1E1E1E),
-        ),
-      ),
-      home: currentUser != null
-          ? (currentUser!.role == 'admin'
-              ? HomeScreen(
-                  user: currentUser!, 
-                  apiService: apiService, 
-                  onLogout: _logout,
-                  notificationService: notificationService,
-                )
-              : (currentUser!.role == 'guest'
-                  ? GuestScreen(user: currentUser!, onLogout: _logout)
-                  : HomeScreen(
-                      user: currentUser!, 
-                      apiService: apiService, 
-                      onLogout: _logout,
-                      notificationService: notificationService,
-                    )))
-          : LoginScreen(
-              apiService: apiService, 
-              onLogin: _login, 
-              onLoginAsGuest: _loginAsGuest,
-            ),
+      home: _buildHomeWithConnectionCheck(),
       debugShowCheckedModeBanner: false,
     );
+  }
+
+  Widget _buildHomeWithConnectionCheck() {
+    if (_connectionError != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.wifi_off, size: 64, color: Colors.red),
+              SizedBox(height: 20),
+              Text(
+                'خطأ في الاتصال',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                _connectionError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _checkConnection,
+                child: Text('إعادة المحاولة'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return currentUser != null
+        ? (currentUser!.role == 'admin'
+            ? HomeScreen(
+                user: currentUser!, 
+                apiService: apiService, 
+                onLogout: _logout,
+                notificationService: notificationService,
+              )
+            : (currentUser!.role == 'guest'
+                ? GuestScreen(user: currentUser!, onLogout: _logout)
+                : HomeScreen(
+                    user: currentUser!, 
+                    apiService: apiService, 
+                    onLogout: _logout,
+                    notificationService: notificationService,
+                  )))
+        : LoginScreen(
+            apiService: apiService, 
+            onLogin: _login, 
+            onLoginAsGuest: _loginAsGuest,
+          );
   }
 }

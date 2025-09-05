@@ -9,49 +9,53 @@ class ApiService {
   // دالة للتحقق من اتصال Supabase
   Future<bool> checkSupabaseConnection() async {
     try {
-      final result = await supabase.from('users').select('count').limit(1);
-      return result != null;
+      // طريقة أبسط للتحقق من الاتصال
+      final response = await supabase.auth.getSession();
+      return response.session != null;
     } catch (e) {
       print('❌ فشل في الاتصال بـ Supabase: $e');
       return false;
     }
   }
 
-  // تسجيل الدخول - الإصدار المعدل
+  // تسجيل الدخول - الإصدار المصحح
   Future<app_user.AppUser?> login(String code, String password) async {
     try {
       print('🔐 محاولة تسجيل الدخول بالكود: $code');
 
-      // البحث عن المستخدم بالكود فقط أولاً
-      final userResponse = await supabase
+      // استخدام query صحيحة لـ Supabase
+      final response = await supabase
           .from('users')
           .select()
           .eq('code', code)
-          .maybeSingle();
+          .eq('password', password);
 
-      if (userResponse == null) {
-        throw Exception('كود المستخدم غير صحيح');
+      if (response.isEmpty) {
+        throw Exception('كود المستخدم أو كلمة المرور غير صحيحة');
       }
 
-      // التحقق من كلمة المرور
-      if (userResponse['password'] != password) {
-        throw Exception('كلمة المرور غير صحيحة');
-      }
-
-      print('✅ تم تسجيل الدخول بنجاح: ${userResponse['username']}');
-      return app_user.AppUser.fromJson(userResponse);
+      final userData = response.first;
+      print('✅ تم تسجيل الدخول بنجاح: ${userData['username']}');
+      
+      return app_user.AppUser.fromJson(userData);
 
     } catch (e) {
       print('❌ خطأ في تسجيل الدخول: $e');
+      
       if (e is PostgrestException) {
-        throw Exception('خطأ في قاعدة البيانات: ${e.message}');
+        if (e.code == 'PGRST116') {
+          throw Exception('بيانات الدخول غير صحيحة');
+        }
+        throw Exception('خطأ في الخادم: ${e.message}');
+      } else if (e.toString().contains('SocketException')) {
+        throw Exception('فشل في الاتصال بالإنترنت');
       } else {
-        rethrow;
+        throw Exception('فشل في تسجيل الدخول: $e');
       }
     }
   }
 
-  // جلب المحتوى
+  // جلب المحتوى - الإصدار المصحح
   Future<List<Content>> getContent() async {
     try {
       print('📦 جلب المحتوى...');
@@ -70,7 +74,7 @@ class ApiService {
     }
   }
 
-  // جلب الرسائل
+  // جلب الرسائل - الإصدار المصحح
   Future<List<Message>> getChatMessages() async {
     try {
       print('💬 جلب الرسائل...');
@@ -82,19 +86,17 @@ class ApiService {
 
       print('✅ تم جلب ${response.length} رسالة');
       
-      // محاولة الحصول على أسماء المستخدمين بشكل منفصل إذا فشل الjoin
       final messagesWithUsers = <Message>[];
       
       for (var message in response) {
         try {
-          // الحصول على اسم المستخدم من جدول users
+          // الحصول على اسم المستخدم
           final userResponse = await supabase
               .from('users')
               .select('username')
-              .eq('code', message['sender_id'])
-              .maybeSingle();
+              .eq('code', message['sender_id']);
 
-          final username = userResponse?['username'] ?? 'مستخدم';
+          final username = userResponse.isNotEmpty ? userResponse[0]['username'] : 'مستخدم';
           
           messagesWithUsers.add(Message.fromJson({
             'id': message['id'],
@@ -106,7 +108,6 @@ class ApiService {
             'timestamp': message['timestamp'],
           }));
         } catch (e) {
-          // إذا فشل الحصول على اسم المستخدم
           messagesWithUsers.add(Message.fromJson({
             'id': message['id'],
             'content': message['content'],
@@ -127,7 +128,7 @@ class ApiService {
     }
   }
 
-  // إرسال رسالة
+  // إرسال رسالة - الإصدار المصحح
   Future<bool> sendMessage({
     required String senderId,
     required String content,
@@ -135,16 +136,20 @@ class ApiService {
     try {
       print('📤 إرسال رسالة...');
       
-      await supabase.from('messages').insert({
+      final response = await supabase.from('messages').insert({
         'content': content,
         'sender_id': senderId,
         'department': '',
         'division': '',
         'timestamp': DateTime.now().toIso8601String(),
-      });
+      }).select();
 
-      print('✅ تم إرسال الرسالة بنجاح');
-      return true;
+      if (response.isNotEmpty) {
+        print('✅ تم إرسال الرسالة بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في إرسال الرسالة');
 
     } catch (e) {
       print('❌ خطأ في إرسال الرسالة: $e');
@@ -152,7 +157,7 @@ class ApiService {
     }
   }
 
-  // جلب المستخدمين
+  // جلب المستخدمين - الإصدار المصحح
   Future<List<app_user.AppUser>> getUsers() async {
     try {
       print('👥 جلب المستخدمين...');
@@ -171,7 +176,7 @@ class ApiService {
     }
   }
 
-  // إضافة مستخدم
+  // إضافة مستخدم - الإصدار المصحح
   Future<bool> addUser({
     required String code,
     required String username,
@@ -181,17 +186,21 @@ class ApiService {
     try {
       print('➕ إضافة مستخدم جديد: $username');
       
-      await supabase.from('users').insert({
+      final response = await supabase.from('users').insert({
         'code': code,
         'username': username,
         'department': '',
         'division': '',
         'role': role,
         'password': password,
-      });
+      }).select();
 
-      print('✅ تم إضافة المستخدم بنجاح');
-      return true;
+      if (response.isNotEmpty) {
+        print('✅ تم إضافة المستخدم بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في إضافة المستخدم');
 
     } catch (e) {
       print('❌ خطأ في إضافة المستخدم: $e');
@@ -199,18 +208,23 @@ class ApiService {
     }
   }
 
-  // حذف مستخدم
+  // حذف مستخدم - الإصدار المصحح
   Future<bool> deleteUser(String code) async {
     try {
       print('🗑️ حذف المستخدم: $code');
       
-      await supabase
+      final response = await supabase
           .from('users')
           .delete()
-          .eq('code', code);
+          .eq('code', code)
+          .select();
 
-      print('✅ تم حذف المستخدم بنجاح');
-      return true;
+      if (response.isNotEmpty) {
+        print('✅ تم حذف المستخدم بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في حذف المستخدم');
 
     } catch (e) {
       print('❌ خطأ في حذف المستخدم: $e');
@@ -218,7 +232,7 @@ class ApiService {
     }
   }
 
-  // رفع محتوى - الإصدار المحسن
+  // رفع محتوى - الإصدار المصحح
   Future<bool> uploadContent({
     required String title,
     required String fileUrl,
@@ -228,21 +242,18 @@ class ApiService {
     try {
       print('📤 رفع محتوى: $title');
       
-      // التحقق من صحة الرابط
       if (!_isValidUrl(fileUrl)) {
         throw Exception('رابط الملف غير صحيح');
       }
 
-      // البحث عن المستخدم بالاسم للحصول على الكود
+      // البحث عن كود المستخدم
       final userResponse = await supabase
           .from('users')
           .select('code')
-          .eq('username', uploadedBy)
-          .maybeSingle();
+          .eq('username', uploadedBy);
 
-      String uploadedByCode = userResponse?['code'] ?? uploadedBy;
+      String uploadedByCode = userResponse.isNotEmpty ? userResponse[0]['code'] : uploadedBy;
 
-      // إدخال البيانات مع معالجة الأخطاء
       final response = await supabase.from('content').insert({
         'title': title,
         'file_path': fileUrl,
@@ -255,28 +266,16 @@ class ApiService {
         'upload_date': DateTime.now().toIso8601String(),
       }).select();
 
-      if (response != null && response.isNotEmpty) {
+      if (response.isNotEmpty) {
         print('✅ تم رفع المحتوى بنجاح');
         return true;
-      } else {
-        throw Exception('فشل في إضافة المحتوى إلى قاعدة البيانات');
       }
+      
+      throw Exception('فشل في رفع المحتوى');
 
     } catch (e) {
       print('❌ خطأ في رفع المحتوى: $e');
-      
-      // معالجة أخطاء محددة
-      if (e is PostgrestException) {
-        if (e.code == '23503') {
-          throw Exception('المستخدم غير موجود في النظام. يرجى استخدام اسم مستخدم صحيح');
-        } else if (e.code == '23505') {
-          throw Exception('هذا المحتوى موجود مسبقاً');
-        } else {
-          throw Exception('خطأ في قاعدة البيانات: ${e.message}');
-        }
-      }
-      
-      throw Exception('فشل في رفع المحتوى: ${e.toString()}');
+      throw Exception('فشل في رفع المحتوى: $e');
     }
   }
 
@@ -290,22 +289,41 @@ class ApiService {
     }
   }
 
-  // حذف محتوى
+  // حذف محتوى - الإصدار المصحح
   Future<bool> deleteContent(String id) async {
     try {
       print('🗑️ حذف المحتوى: $id');
       
-      await supabase
+      final response = await supabase
           .from('content')
           .delete()
-          .eq('id', id);
+          .eq('id', id)
+          .select();
 
-      print('✅ تم حذف المحتوى بنجاح');
-      return true;
+      if (response.isNotEmpty) {
+        print('✅ تم حذف المحتوى بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في حذف المحتوى');
 
     } catch (e) {
       print('❌ خطأ في حذف المحتوى: $e');
       throw Exception('فشل في حذف المحتوى: $e');
+    }
+  }
+
+  // دالة مساعدة للتحقق من وجود المستخدم
+  Future<bool> userExists(String code) async {
+    try {
+      final response = await supabase
+          .from('users')
+          .select()
+          .eq('code', code);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      return false;
     }
   }
 }
