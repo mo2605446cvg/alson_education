@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:alson_education/services/api_service.dart';
+import 'package:alson_education/screens/image_viewer_screen.dart';
 import 'package:alson_education/models/user.dart' as app_user;
 import 'package:alson_education/models/message.dart';
 
@@ -56,13 +57,42 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _startAutoRefresh() {
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(Duration(minutes: 5), () {
       if (mounted) {
         _loadMessages();
         _startAutoRefresh();
       }
     });
   }
+  // أضف دالة لفتح الوسائط
+  void _openMedia(Message message) {
+    final isImage = message.content.contains('[image]');
+    final isFile = message.content.contains('[file]');
+    final content = message.content.replaceAll('[image]', '').replaceAll('[file]', '');
+
+    if (isImage) {
+      // فتح الصورة في صفحة مكبرة
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ImageViewerScreen(imageUrl: content),
+        ),
+      );
+    } else if (isFile) {
+      // يمكن إضافة فتح الملف أو تنزيله
+      _downloadFile(content);
+    }
+  }
+
+  // دالة تنزيل الملف
+  void _downloadFile(String fileUrl) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('جاري تحضير الملف للتنزيل...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
@@ -161,111 +191,115 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageBubble(Message message, bool isMe) {
     final isImage = message.content.contains('[image]');
     final isFile = message.content.contains('[file]');
+    final isMedia = isImage || isFile;
     final content = message.content.replaceAll('[image]', '').replaceAll('[file]', '');
 
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (!isMe) ...[
-                CircleAvatar(
-                  backgroundColor: Colors.blueAccent,
-                  radius: 16,
-                  child: Text(
-                    message.username.isNotEmpty ? message.username[0].toUpperCase() : '?',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+    return GestureDetector(
+      onTap: isMedia ? () => _openMedia(message) : null,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Column(
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (!isMe) ...[
+                  CircleAvatar(
+                    backgroundColor: Colors.blueAccent,
+                    radius: 16,
+                    child: Text(
+                      message.username.isNotEmpty ? message.username[0].toUpperCase() : '?',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-                SizedBox(width: 6),
-              ],
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isMe ? Colors.blue[700] : Colors.grey[800],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!isMe)
-                        Text(
-                          message.username,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      if (!isMe) SizedBox(height: 2),
-                      
-                      if (isImage)
-                        Column(
-                          children: [
-                            Icon(Icons.image, size: 40, color: Colors.white),
-                            SizedBox(height: 4),
-                            Text(content, style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          ],
-                        )
-                      else if (isFile)
-                        Column(
-                          children: [
-                            Icon(Icons.insert_drive_file, size: 40, color: Colors.white),
-                            SizedBox(height: 4),
-                            Text(content, style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          ],
-                        )
-                      else
-                        Text(
-                          content,
-                          style: TextStyle(fontSize: 14, color: Colors.white),
-                        ),
-                      
-                      SizedBox(height: 4),
-                      Text(
-                        _formatTimestamp(message.timestamp),
-                        style: TextStyle(fontSize: 10, color: Colors.white54),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (isMe) ...[
-                SizedBox(width: 6),
-                CircleAvatar(
-                  backgroundColor: Colors.green[700],
-                  radius: 16,
-                  child: Text(
-                    'أنت',
-                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          
-          // أزرار التفاعل
-          if (!isMe)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, right: 50),
-              child: Row(
-                children: [
-                  _buildReactionButton('👍', message),
-                  SizedBox(width: 4),
-                  _buildReactionButton('❤️', message),
-                  SizedBox(width: 4),
-                  _buildReactionButton('😂', message),
-                  SizedBox(width: 4),
-                  _buildReactionButton('😮', message),
+                  SizedBox(width: 6),
                 ],
-              ),
+                Flexible(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.blue[700] : Colors.grey[800],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isMe)
+                          Text(
+                            message.username,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        if (!isMe) SizedBox(height: 2),
+                        
+                        if (isImage)
+                          Column(
+                            children: [
+                              Icon(Icons.image, size: 40, color: Colors.white),
+                              SizedBox(height: 4),
+                              Text(content, style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            ],
+                          )
+                        else if (isFile)
+                          Column(
+                            children: [
+                              Icon(Icons.insert_drive_file, size: 40, color: Colors.white),
+                              SizedBox(height: 4),
+                              Text(content, style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            ],
+                          )
+                        else
+                          Text(
+                            content,
+                            style: TextStyle(fontSize: 14, color: Colors.white),
+                          ),
+                        
+                        SizedBox(height: 4),
+                        Text(
+                          _formatTimestamp(message.timestamp),
+                          style: TextStyle(fontSize: 10, color: Colors.white54),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (isMe) ...[
+                  SizedBox(width: 6),
+                  CircleAvatar(
+                    backgroundColor: Colors.green[700],
+                    radius: 16,
+                    child: Text(
+                      'أنت',
+                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ],
             ),
-        ],
+            
+            // أزرار التفاعل
+            if (!isMe)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, right: 50),
+                child: Row(
+                  children: [
+                    _buildReactionButton('👍', message),
+                    SizedBox(width: 4),
+                    _buildReactionButton('❤️', message),
+                    SizedBox(width: 4),
+                    _buildReactionButton('😂', message),
+                    SizedBox(width: 4),
+                    _buildReactionButton('😮', message),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -313,6 +347,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: isAdmin
           ? Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // أزرار الوسائط
                 Row(
