@@ -1,3 +1,4 @@
+import 'dart:async'; // أضف هذا السطر
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alson_education/models/user.dart' as app_user;
@@ -359,3 +360,4 @@ class ApiService {
     }
   }
 }
+
