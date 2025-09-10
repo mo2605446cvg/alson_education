@@ -7,10 +7,8 @@ import 'package:alson_education/models/message.dart';
 class ApiService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // دالة للتحقق من اتصال Supabase بشكل أفضل
   Future<bool> checkSupabaseConnection() async {
     try {
-      // محاولة الاتصال بخادم موثوق أولاً للتحقق من الإنترنت
       try {
         final internetResult = await InternetAddress.lookup('google.com')
             .timeout(const Duration(seconds: 10));
@@ -22,10 +20,8 @@ class ApiService {
         return false;
       }
 
-      // ثم التحقق من اتصال Supabase بطريقة أكثر موثوقية
       final session = supabase.auth.currentSession;
       
-      // اختبار اتصال فعلي بجلب بيانات بسيطة
       try {
         final testResponse = await supabase
             .from('users')
@@ -37,7 +33,6 @@ class ApiService {
       } catch (e) {
         print('❌ فشل اختبار الاتصال بـ Supabase: $e');
         
-        // محاولة إعادة الاتصال
         try {
           await Supabase.instance.dispose();
           await Supabase.initialize(
@@ -57,12 +52,10 @@ class ApiService {
     }
   }
 
-  // تسجيل الدخول - الإصدار المصحح
   Future<app_user.AppUser?> login(String code, String password) async {
     try {
       print('🔐 محاولة تسجيل الدخول بالكود: $code');
 
-      // استخدام query صحيحة لـ Supabase
       final response = await supabase
           .from('users')
           .select()
@@ -95,7 +88,6 @@ class ApiService {
     }
   }
 
-  // جلب المحتوى - الإصدار المصحح
   Future<List<Content>> getContent() async {
     try {
       print('📦 جلب المحتوى...');
@@ -115,12 +107,268 @@ class ApiService {
     }
   }
 
-  // جلب الرسائل - الإصدار المصحح
   Future<List<Message>> getChatMessages() async {
     try {
       print('💬 جلب الرسائل...');
       
       final response = await supabase
+          .from('messages')
+          .select()
+          .order('timestamp', ascending: true)
+          .timeout(const Duration(seconds: 15));
+
+      print('✅ تم جلب ${response.length} رسالة');
+      
+      final messagesWithUsers = <Message>[];
+      
+      for (var message in response) {
+        try {
+          final userResponse = await supabase
+              .from('users')
+              .select('username')
+              .eq('code', message['sender_id'])
+              .timeout(const Duration(seconds: 10));
+
+          final username = userResponse.isNotEmpty ? userResponse[0]['username'] : 'مستخدم';
+          
+          messagesWithUsers.add(Message.fromJson({
+            'id': message['id'].toString(),
+            'content': message['content']?.toString() ?? '',
+            'sender_id': message['sender_id']?.toString() ?? '',
+            'username': username,
+            'department': message['department']?.toString() ?? '',
+            'division': message['division']?.toString() ?? '',
+            'timestamp': message['timestamp']?.toString() ?? '',
+          }));
+        } catch (e) {
+          print('❌ خطأ في جلب اسم المستخدم: $e');
+          messagesWithUsers.add(Message.fromJson({
+            'id': message['id'].toString(),
+            'content': message['content']?.toString() ?? '',
+            'sender_id': message['sender_id']?.toString() ?? '',
+            'username': 'مستخدم',
+            'department': message['department']?.toString() ?? '',
+            'division': message['division']?.toString() ?? '',
+            'timestamp': message['timestamp']?.toString() ?? '',
+          }));
+        }
+      }
+      
+      return messagesWithUsers;
+
+    } catch (e) {
+      print('❌ خطأ في جلب الرسائل: $e');
+      throw Exception('فشل في جلب الرسائل: $e');
+    }
+  }
+
+  Future<bool> sendMessage({
+    required String senderId,
+    required String content,
+  }) async {
+    try {
+      print('📤 إرسال رسالة...');
+      
+      final response = await supabase.from('messages').insert({
+        'content': content,
+        'sender_id': senderId,
+        'department': '',
+        'division': '',
+        'timestamp': DateTime.now().toIso8601String(),
+      }).select().timeout(const Duration(seconds: 15));
+
+      if (response.isNotEmpty) {
+        print('✅ تم إرسال الرسالة بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في إرسال الرسالة');
+
+    } catch (e) {
+      print('❌ خطأ في إرسال الرسالة: $e');
+      throw Exception('فشل في إرسال الرسالة: $e');
+    }
+  }
+
+  Future<List<app_user.AppUser>> getUsers() async {
+    try {
+      print('👥 جلب المستخدمين...');
+      
+      final response = await supabase
+          .from('users')
+          .select()
+          .order('username', ascending: true)
+          .timeout(const Duration(seconds: 15));
+
+      print('✅ تم جلب ${response.length} مستخدم');
+      return response.map((item) => app_user.AppUser.fromJson(item)).toList();
+
+    } catch (e) {
+      print('❌ خطأ في جلب المستخدمين: $e');
+      throw Exception('فشل في جلب المستخدمين: $e');
+    }
+  }
+
+  Future<bool> addUser({
+    required String code,
+    required String username,
+    required String role,
+    required String password,
+  }) async {
+    try {
+      print('➕ إضافة مستخدم جديد: $username');
+      
+      final response = await supabase.from('users').insert({
+        'code': code,
+        'username': username,
+        'department': '',
+        'division': '',
+        'role': role,
+        'password': password,
+      }).select().timeout(const Duration(seconds: 15));
+
+      if (response.isNotEmpty) {
+        print('✅ تم إضافة المستخدم بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في إضافة المستخدم');
+
+    } catch (e) {
+      print('❌ خطأ في إضافة المستخدم: $e');
+      throw Exception('فشل في إضافة المستخدم: $e');
+    }
+  }
+
+  Future<bool> deleteUser(String code) async {
+    try {
+      print('🗑️ حذف المستخدم: $code');
+      
+      final response = await supabase
+          .from('users')
+          .delete()
+          .eq('code', code)
+          .select()
+          .timeout(const Duration(seconds: 15));
+
+      if (response.isNotEmpty) {
+        print('✅ تم حذف المستخدم بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في حذف المستخدم');
+
+    } catch (e) {
+      print('❌ خطأ في حذف المستخدم: $e');
+      throw Exception('فشل في حذف المستخدم: $e');
+    }
+  }
+
+  Future<bool> uploadContent({
+    required String title,
+    required String fileUrl,
+    required String uploadedBy,
+    required String description,
+  }) async {
+    try {
+      print('📤 رفع محتوى: $title');
+      
+      if (!_isValidUrl(fileUrl)) {
+        throw Exception('رابط الملف غير صحيح');
+      }
+
+      final userResponse = await supabase
+          .from('users')
+          .select('code')
+          .eq('username', uploadedBy)
+          .timeout(const Duration(seconds: 10));
+
+      String uploadedByCode = userResponse.isNotEmpty ? userResponse[0]['code'] : uploadedBy;
+
+      final response = await supabase.from('content').insert({
+        'title': title,
+        'file_path': fileUrl,
+        'file_type': fileUrl.split('.').last.toLowerCase(),
+        'file_size': '0',
+        'uploaded_by': uploadedByCode,
+        'department': '',
+        'division': '',
+        'description': description,
+        'upload_date': DateTime.now().toIso8601String(),
+      }).select().timeout(const Duration(seconds: 15));
+
+      if (response.isNotEmpty) {
+        print('✅ تم رفع المحتوى بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في رفع المحتوى');
+
+    } catch (e) {
+      print('❌ خطأ في رفع المحتوى: $e');
+      throw Exception('فشل في رفع المحتوى: $e');
+    }
+  }
+
+  bool _isValidUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      return uri.isAbsolute && (uri.scheme == 'http' || uri.scheme == 'https');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteContent(String id) async {
+    try {
+      print('🗑️ حذف المحتوى: $id');
+      
+      final response = await supabase
+          .from('content')
+          .delete()
+          .eq('id', id)
+          .select()
+          .timeout(const Duration(seconds: 15));
+
+      if (response.isNotEmpty) {
+        print('✅ تم حذف المحتوى بنجاح');
+        return true;
+      }
+      
+      throw Exception('فشل في حذف المحتوى');
+
+    } catch (e) {
+      print('❌ خطأ في حذف المحتوى: $e');
+      throw Exception('فشل في حذف المحتوى: $e');
+    }
+  }
+
+  Future<bool> userExists(String code) async {
+    try {
+      final response = await supabase
+          .from('users')
+          .select()
+          .eq('code', code)
+          .timeout(const Duration(seconds: 10));
+
+      return response.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> checkInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 10));
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false;
+    } on TimeoutException catch (_) {
+      return false;
+    }
+  }
+}      final response = await supabase
           .from('messages')
           .select()
           .order('timestamp', ascending: true)
@@ -1021,5 +1269,6 @@ class ApiService {
     }
   }
 }
+
 
 
